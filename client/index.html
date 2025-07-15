@@ -264,18 +264,18 @@
             <div class="stat-label">Points</div>
           </div>
           <div class="stat-item">
-            <div class="stat-value" id="avery-earnings">$0</div>
-            <div class="stat-label">This Week</div>
+            <div class="stat-value" id="avery-earnings">In Progress...</div>
+            <div class="stat-label">Today's Status</div>
           </div>
           <div class="stat-item">
-            <div class="stat-value" id="avery-streak">0</div>
-            <div class="stat-label">Day Streak</div>
+            <div class="stat-value" id="avery-streak">30 to go</div>
+            <div class="stat-label">Reward Progress</div>
           </div>
         </div>
         
         <div class="tasks-container">
           <div class="task-group">
-            <div class="task-group-title">Weekly Chores</div>
+            <div class="task-group-title">Daily Chores</div>
             <div id="avery-weekly-tasks"></div>
           </div>
           
@@ -300,18 +300,18 @@
             <div class="stat-label">Points</div>
           </div>
           <div class="stat-item">
-            <div class="stat-value" id="adyson-earnings">$0</div>
-            <div class="stat-label">This Week</div>
+            <div class="stat-value" id="adyson-earnings">In Progress...</div>
+            <div class="stat-label">Today's Status</div>
           </div>
           <div class="stat-item">
-            <div class="stat-value" id="adyson-streak">0</div>
-            <div class="stat-label">Day Streak</div>
+            <div class="stat-value" id="adyson-streak">30 to go</div>
+            <div class="stat-label">Reward Progress</div>
           </div>
         </div>
         
         <div class="tasks-container">
           <div class="task-group">
-            <div class="task-group-title">Weekly Chores</div>
+            <div class="task-group-title">Daily Chores</div>
             <div id="adyson-weekly-tasks"></div>
           </div>
           
@@ -327,7 +327,6 @@
 
     <div class="admin-controls">
       <button class="admin-btn" onclick="resetDay()">Reset Day</button>
-      <button class="admin-btn approve" id="approve-btn" onclick="approveWeek()" style="display: none;">Approve Week</button>
     </div>
 
     <script>
@@ -371,8 +370,8 @@
         return {
           avery: {
             points: 0,
-            weeklyTasks: {},
-            dailyTasks: {},
+            dailyChores: {}, // Track daily completion of weekly chores
+            dailyExtras: {}, // Track daily completion of extra tasks
             lastResetDate: getCurrentDateString(),
             currentWeek: getCurrentWeekType(),
             streak: 0,
@@ -381,8 +380,8 @@
           },
           adyson: {
             points: 0,
-            weeklyTasks: {},
-            dailyTasks: {},
+            dailyChores: {}, // Track daily completion of weekly chores
+            dailyExtras: {}, // Track daily completion of extra tasks
             lastResetDate: getCurrentDateString(),
             currentWeek: getCurrentWeekType() === 'A' ? 'B' : 'A',
             streak: 0,
@@ -402,8 +401,10 @@
         
         if (appData.avery.lastResetDate !== currentDate) {
           // Reset daily tasks
-          appData.avery.dailyTasks = {};
-          appData.adyson.dailyTasks = {};
+          appData.avery.dailyChores = {};
+          appData.avery.dailyExtras = {};
+          appData.adyson.dailyChores = {};
+          appData.adyson.dailyExtras = {};
           appData.avery.lastResetDate = currentDate;
           appData.adyson.lastResetDate = currentDate;
           
@@ -411,8 +412,6 @@
           if (appData.avery.currentWeek !== currentWeek) {
             appData.avery.currentWeek = currentWeek;
             appData.adyson.currentWeek = currentWeek === 'A' ? 'B' : 'A';
-            appData.avery.weeklyTasks = {};
-            appData.adyson.weeklyTasks = {};
             appData.avery.weeklyComplete = false;
             appData.adyson.weeklyComplete = false;
             appData.avery.bonusEarned = false;
@@ -432,21 +431,15 @@
         return tile;
       }
 
-      // Check if all daily tasks are complete for the week
-      function checkWeeklyDailyCompletion(childData) {
-        const currentDate = new Date();
-        const currentWeek = Math.floor(currentDate.getTime() / (1000 * 60 * 60 * 24 * 7));
-        
-        // Check if all daily tasks are completed for each day this week
-        for (let day = 0; day < 7; day++) {
-          const dayKey = `${currentWeek}-${day}`;
-          for (const task of DAILY_EXTRAS) {
-            if (!childData.dailyTasks[`${dayKey}-${task}`]) {
-              return false;
-            }
-          }
-        }
-        return true;
+      // Check if all daily chores are complete (for $16 earning)
+      function checkDailyChoresComplete(childData) {
+        const dailyChores = CHORE_LISTS[childData.currentWeek];
+        return dailyChores.every(task => childData.dailyChores[task]);
+      }
+
+      // Check if all daily extras are complete (for $4 bonus and 1 point)
+      function checkDailyExtrasComplete(childData) {
+        return DAILY_EXTRAS.every(task => childData.dailyExtras[task]);
       }
 
       // Update child's tasks display
@@ -459,34 +452,32 @@
         weeklyTasksContainer.innerHTML = '';
         dailyTasksContainer.innerHTML = '';
         
-        // Weekly tasks
-        const weeklyTasks = CHORE_LISTS[childData.currentWeek];
-        weeklyTasks.forEach(task => {
-          const isCompleted = childData.weeklyTasks[task] || false;
+        // Daily chores (weekly chores done daily)
+        const dailyChores = CHORE_LISTS[childData.currentWeek];
+        dailyChores.forEach(task => {
+          const isCompleted = childData.dailyChores[task] || false;
           const tile = createTaskTile(task, isCompleted, () => {
             // Toggle the task completion
-            childData.weeklyTasks[task] = !isCompleted;
+            childData.dailyChores[task] = !isCompleted;
             updateDisplay();
             saveData(appData);
           });
           weeklyTasksContainer.appendChild(tile);
         });
         
-        // Daily tasks
-        const currentDate = new Date();
-        const currentWeek = Math.floor(currentDate.getTime() / (1000 * 60 * 60 * 24 * 7));
-        const currentDay = currentDate.getDay();
-        const dayKey = `${currentWeek}-${currentDay}`;
-        
+        // Daily extra tasks
         DAILY_EXTRAS.forEach(task => {
-          const taskKey = `${dayKey}-${task}`;
-          const isCompleted = childData.dailyTasks[taskKey] || false;
+          const isCompleted = childData.dailyExtras[task] || false;
           const tile = createTaskTile(task, isCompleted, () => {
             // Toggle the task completion
             if (isCompleted) {
-              delete childData.dailyTasks[taskKey];
+              delete childData.dailyExtras[task];
+              // Remove 1 point when unchecking extra task
+              childData.points = Math.max(0, childData.points - 1);
             } else {
-              childData.dailyTasks[taskKey] = true;
+              childData.dailyExtras[task] = true;
+              // Award 1 point for completing extra task
+              childData.points += 1;
             }
             updateDisplay();
             saveData(appData);
@@ -495,27 +486,23 @@
         });
       }
 
-      // Calculate earnings
-      function calculateEarnings(childData) {
-        let earnings = 0;
+      // Calculate today's earnings status
+      function getTodaysStatus(childData) {
+        const choresDone = checkDailyChoresComplete(childData);
+        const extrasDone = checkDailyExtrasComplete(childData);
         
-        // Check weekly chores completion
-        const weeklyTasks = CHORE_LISTS[childData.currentWeek];
-        const weeklyComplete = weeklyTasks.every(task => childData.weeklyTasks[task]);
-        
-        if (weeklyComplete) {
-          earnings += 16; // Base allowance
-          childData.weeklyComplete = true;
+        let status = '';
+        if (choresDone && extrasDone) {
+          status = 'Complete! 🌟';
+        } else if (choresDone) {
+          status = 'Chores Done ✓';
+        } else if (extrasDone) {
+          status = 'Extras Done ✓';
+        } else {
+          status = 'In Progress...';
         }
         
-        // Check daily extras bonus
-        if (checkWeeklyDailyCompletion(childData) && !childData.bonusEarned) {
-          earnings += 4; // Bonus
-          childData.points += 1; // Merch point
-          childData.bonusEarned = true;
-        }
-        
-        return earnings;
+        return status;
       }
 
       // Update bonus indicator
@@ -523,12 +510,19 @@
         const childData = appData[childName.toLowerCase()];
         const bonusElement = document.getElementById(`${childName.toLowerCase()}-bonus`);
         
-        if (childData.bonusEarned) {
-          bonusElement.textContent = '🎉 Bonus Earned! +$4 & +1 Point';
+        const choresDone = checkDailyChoresComplete(childData);
+        const extrasDone = checkDailyExtrasComplete(childData);
+        
+        if (choresDone && extrasDone) {
+          bonusElement.textContent = '🌟 All Tasks Complete Today!';
           bonusElement.className = 'bonus-indicator bonus-earned';
           bonusElement.style.display = 'block';
-        } else if (checkWeeklyDailyCompletion(childData)) {
-          bonusElement.textContent = '⭐ Bonus Available! Complete all daily tasks this week';
+        } else if (choresDone) {
+          bonusElement.textContent = '✓ Daily Chores Complete';
+          bonusElement.className = 'bonus-indicator bonus-available';
+          bonusElement.style.display = 'block';
+        } else if (extrasDone) {
+          bonusElement.textContent = '✓ Extra Tasks Complete';
           bonusElement.className = 'bonus-indicator bonus-available';
           bonusElement.style.display = 'block';
         } else {
@@ -548,25 +542,12 @@
           
           // Update stats
           document.getElementById(`${childName}-points`).textContent = childData.points;
-          document.getElementById(`${childName}-earnings`).textContent = `$${calculateEarnings(childData)}`;
+          document.getElementById(`${childName}-earnings`).textContent = getTodaysStatus(childData);
           
-          // Update streak (simplified - just count consecutive days with all daily tasks)
-          const currentDate = new Date();
-          const currentWeek = Math.floor(currentDate.getTime() / (1000 * 60 * 60 * 24 * 7));
-          const currentDay = currentDate.getDay();
-          let streak = 0;
-          
-          for (let day = currentDay; day >= 0; day--) {
-            const dayKey = `${currentWeek}-${day}`;
-            const dayComplete = DAILY_EXTRAS.every(task => childData.dailyTasks[`${dayKey}-${task}`]);
-            if (dayComplete) {
-              streak++;
-            } else {
-              break;
-            }
-          }
-          
-          document.getElementById(`${childName}-streak`).textContent = streak;
+          // Update streak (points toward 30 point reward)
+          const pointsToReward = 30 - childData.points;
+          let streakText = pointsToReward <= 0 ? 'REWARD!' : `${pointsToReward} to go`;
+          document.getElementById(`${childName}-streak`).textContent = streakText;
           
           // Update tasks
           updateChildTasks(childName);
@@ -575,35 +556,21 @@
           updateBonusIndicator(childName);
         });
         
-        // Show approve button on Sundays
-        const approveBtn = document.getElementById('approve-btn');
-        if (getCurrentDay() === 0) { // Sunday
-          approveBtn.style.display = 'block';
-        } else {
-          approveBtn.style.display = 'none';
-        }
+        // No longer need approve button functionality
       }
 
       // Reset day function
       function resetDay() {
-        if (confirm('Reset today\'s tasks? This will clear all daily task completions for today and weekly chores.')) {
-          const currentDate = new Date();
-          const currentWeek = Math.floor(currentDate.getTime() / (1000 * 60 * 60 * 24 * 7));
-          const currentDay = currentDate.getDay();
-          const dayKey = `${currentWeek}-${currentDay}`;
-          
-          // Reset today's daily tasks and weekly chores
+        if (confirm('Reset today\'s tasks? This will clear all daily chores and extra tasks for today.')) {
+          // Reset today's daily tasks
           ['avery', 'adyson'].forEach(childName => {
             const childData = appData[childName];
             
-            // Reset daily tasks for today
-            DAILY_EXTRAS.forEach(task => {
-              const taskKey = `${dayKey}-${task}`;
-              delete childData.dailyTasks[taskKey];
-            });
+            // Reset daily chores
+            childData.dailyChores = {};
             
-            // Reset weekly chores
-            childData.weeklyTasks = {};
+            // Reset daily extras
+            childData.dailyExtras = {};
           });
           
           saveData(appData);
@@ -611,31 +578,7 @@
         }
       }
 
-      // Approve week function
-      function approveWeek() {
-        if (confirm('Approve and reset the week? This will reset all tasks and earnings.')) {
-          // Reset all data for new week
-          appData.avery.weeklyTasks = {};
-          appData.avery.dailyTasks = {};
-          appData.avery.weeklyComplete = false;
-          appData.avery.bonusEarned = false;
-          
-          appData.adyson.weeklyTasks = {};
-          appData.adyson.dailyTasks = {};
-          appData.adyson.weeklyComplete = false;
-          appData.adyson.bonusEarned = false;
-          
-          // Swap week types
-          const temp = appData.avery.currentWeek;
-          appData.avery.currentWeek = appData.adyson.currentWeek;
-          appData.adyson.currentWeek = temp;
-          
-          saveData(appData);
-          updateDisplay();
-          
-          alert('Week approved and reset! Tasks have been swapped.');
-        }
-      }
+
 
       // Initialize app
       checkDailyReset();
