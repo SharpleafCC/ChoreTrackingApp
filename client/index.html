@@ -365,13 +365,30 @@
       function loadData() {
         const saved = localStorage.getItem('choreTracker');
         if (saved) {
-          return JSON.parse(saved);
+          const data = JSON.parse(saved);
+          // Migrate old data structure to new one
+          ['avery', 'adyson'].forEach(childName => {
+            const childData = data[childName];
+            if (childData.weeklyTasks && !childData.dailyChores) {
+              childData.dailyChores = childData.weeklyTasks || {};
+            }
+            if (childData.dailyTasks && !childData.dailyExtras) {
+              childData.dailyExtras = {};
+            }
+            // Ensure all required properties exist
+            childData.dailyChores = childData.dailyChores || {};
+            childData.dailyExtras = childData.dailyExtras || {};
+            childData.dailyExtrasCompletedToday = childData.dailyExtrasCompletedToday || false;
+            childData.points = childData.points || 0;
+          });
+          return data;
         }
         return {
           avery: {
             points: 0,
             dailyChores: {}, // Track daily completion of weekly chores
             dailyExtras: {}, // Track daily completion of extra tasks
+            dailyExtrasCompletedToday: false, // Track if all extras completed today
             lastResetDate: getCurrentDateString(),
             currentWeek: getCurrentWeekType(),
             streak: 0,
@@ -382,6 +399,7 @@
             points: 0,
             dailyChores: {}, // Track daily completion of weekly chores
             dailyExtras: {}, // Track daily completion of extra tasks
+            dailyExtrasCompletedToday: false, // Track if all extras completed today
             lastResetDate: getCurrentDateString(),
             currentWeek: getCurrentWeekType() === 'A' ? 'B' : 'A',
             streak: 0,
@@ -403,8 +421,10 @@
           // Reset daily tasks
           appData.avery.dailyChores = {};
           appData.avery.dailyExtras = {};
+          appData.avery.dailyExtrasCompletedToday = false;
           appData.adyson.dailyChores = {};
           appData.adyson.dailyExtras = {};
+          appData.adyson.dailyExtrasCompletedToday = false;
           appData.avery.lastResetDate = currentDate;
           appData.adyson.lastResetDate = currentDate;
           
@@ -472,13 +492,24 @@
             // Toggle the task completion
             if (isCompleted) {
               delete childData.dailyExtras[task];
-              // Remove 1 point when unchecking extra task
-              childData.points = Math.max(0, childData.points - 1);
             } else {
               childData.dailyExtras[task] = true;
-              // Award 1 point for completing extra task
-              childData.points += 1;
             }
+            
+            // Check if all extra tasks are now complete
+            const allExtrasComplete = checkDailyExtrasComplete(childData);
+            const wasComplete = childData.dailyExtrasCompletedToday || false;
+            
+            if (allExtrasComplete && !wasComplete) {
+              // Award 1 point for completing ALL extra tasks today
+              childData.points += 1;
+              childData.dailyExtrasCompletedToday = true;
+            } else if (!allExtrasComplete && wasComplete) {
+              // Remove 1 point if they were complete but now aren't
+              childData.points = Math.max(0, childData.points - 1);
+              childData.dailyExtrasCompletedToday = false;
+            }
+            
             updateDisplay();
             saveData(appData);
           });
@@ -571,6 +602,7 @@
             
             // Reset daily extras
             childData.dailyExtras = {};
+            childData.dailyExtrasCompletedToday = false;
           });
           
           saveData(appData);
