@@ -2,7 +2,7 @@
 
 ## Overview
 
-This is a modern web application built to help parents track their children's chores and reward system. The app features a kid-friendly interface with colorful design, star-based rewards, and gamification elements to encourage children to complete their tasks.
+This is a touch-friendly chore tracking application specifically designed for Avery and Adyson. The app features a simple HTML/CSS/JavaScript interface with a split-screen design, A/B weekly chore rotation system, and automatic earnings tracking. It's optimized for iPad use in full-screen mode mounted on a fridge.
 
 ## User Preferences
 
@@ -89,8 +89,19 @@ Preferred communication style: Simple, everyday language.
 - **Environment**: NODE_ENV=production with optimized builds
 
 ### Database Management
-- **Migrations**: Drizzle Kit handles schema migrations
+- **Migrations**: Drizzle Kit handles schema migrations with `npm run db:push`
 - **Schema**: Centralized in `shared/schema.ts` for type safety
 - **Connection**: Environment-based DATABASE_URL configuration
+- **Storage**: DatabaseStorage class implements full CRUD operations
 
-The application follows a monorepo structure with shared types and schemas, enabling full-stack TypeScript development with excellent developer experience and type safety throughout the entire application.
+## Recent Changes
+- January 15, 2025: Converted to simple HTML/CSS/JS chore tracker for Avery & Adyson
+- Added PostgreSQL database support with Drizzle ORM
+- Implemented DatabaseStorage class replacing MemStorage
+- Added A/B weekly chore rotation system (A-list vs B-list chores)
+- Created touch-friendly split-screen interface optimized for iPad
+- Added automatic daily reset and earnings tracking ($16 base + $4 bonus)
+- Set up localStorage persistence for client-side data
+- Added parent controls for week approval and task reset
+
+The application now serves a simple HTML file with embedded CSS and JavaScript, making it perfect for full-screen iPad use while maintaining database persistence for chore tracking data.

@@ -1,4 +1,6 @@
 import { kids, chores, achievements, rewards, type Kid, type InsertKid, type Chore, type InsertChore, type Achievement, type InsertAchievement, type Reward, type InsertReward } from "@shared/schema";
+import { db } from "./db";
+import { eq } from "drizzle-orm";
 
 export interface IStorage {
   // Kids
@@ -32,180 +34,145 @@ export interface IStorage {
   awardStars(kidId: number, stars: number): Promise<void>;
 }
 
-export class MemStorage implements IStorage {
-  private kids: Map<number, Kid> = new Map();
-  private chores: Map<number, Chore> = new Map();
-  private achievements: Map<number, Achievement> = new Map();
-  private rewards: Map<number, Reward> = new Map();
-  private currentKidId = 1;
-  private currentChoreId = 1;
-  private currentAchievementId = 1;
-  private currentRewardId = 1;
-
-  constructor() {
-    // Initialize with default kids and rewards
-    this.initializeDefaults();
-  }
-
-  private initializeDefaults() {
-    // Create default kids
-    const defaultKids = [
-      { name: "Emma", stars: 12, color: "#FF6B6B" },
-      { name: "Liam", stars: 8, color: "#4ECDC4" },
-      { name: "Mia", stars: 15, color: "#45B7D1" }
-    ];
-
-    defaultKids.forEach(kid => {
-      const newKid: Kid = { ...kid, id: this.currentKidId++ };
-      this.kids.set(newKid.id, newKid);
-    });
-
-    // Create default rewards
-    const defaultRewards = [
-      { name: "Ice Cream", description: "Enjoy a special treat!", icon: "ice-cream", starCost: 10, color: "#FFB347" },
-      { name: "Extra Screen Time", description: "30 minutes bonus gaming!", icon: "gamepad", starCost: 15, color: "#FF6B6B" },
-      { name: "Fun Outing", description: "Choose your adventure!", icon: "bicycle", starCost: 25, color: "#4ECDC4" }
-    ];
-
-    defaultRewards.forEach(reward => {
-      const newReward: Reward = { ...reward, id: this.currentRewardId++ };
-      this.rewards.set(newReward.id, newReward);
-    });
-  }
-
+export class DatabaseStorage implements IStorage {
   // Kids
   async getAllKids(): Promise<Kid[]> {
-    return Array.from(this.kids.values());
+    return await db.select().from(kids);
   }
 
   async getKid(id: number): Promise<Kid | undefined> {
-    return this.kids.get(id);
+    const [kid] = await db.select().from(kids).where(eq(kids.id, id));
+    return kid || undefined;
   }
 
   async createKid(kid: InsertKid): Promise<Kid> {
-    const newKid: Kid = { ...kid, id: this.currentKidId++ };
-    this.kids.set(newKid.id, newKid);
+    const [newKid] = await db
+      .insert(kids)
+      .values(kid)
+      .returning();
     return newKid;
   }
 
   async updateKid(id: number, updates: Partial<Kid>): Promise<Kid | undefined> {
-    const kid = this.kids.get(id);
-    if (!kid) return undefined;
-    
-    const updatedKid = { ...kid, ...updates, id };
-    this.kids.set(id, updatedKid);
-    return updatedKid;
+    const [updatedKid] = await db
+      .update(kids)
+      .set(updates)
+      .where(eq(kids.id, id))
+      .returning();
+    return updatedKid || undefined;
   }
 
   async deleteKid(id: number): Promise<boolean> {
-    const deleted = this.kids.delete(id);
-    if (deleted) {
-      // Also delete associated chores and achievements
-      this.chores.forEach((chore, choreId) => {
-        if (chore.kidId === id) {
-          this.chores.delete(choreId);
-        }
-      });
-      this.achievements.forEach((achievement, achievementId) => {
-        if (achievement.kidId === id) {
-          this.achievements.delete(achievementId);
-        }
-      });
-    }
-    return deleted;
+    // Delete associated chores and achievements first
+    await db.delete(chores).where(eq(chores.kidId, id));
+    await db.delete(achievements).where(eq(achievements.kidId, id));
+    
+    const result = await db.delete(kids).where(eq(kids.id, id));
+    return (result.rowCount ?? 0) > 0;
   }
 
   // Chores
   async getAllChores(): Promise<Chore[]> {
-    return Array.from(this.chores.values());
+    return await db.select().from(chores);
   }
 
   async getChoresByKid(kidId: number): Promise<Chore[]> {
-    return Array.from(this.chores.values()).filter(chore => chore.kidId === kidId);
+    return await db.select().from(chores).where(eq(chores.kidId, kidId));
   }
 
   async getChore(id: number): Promise<Chore | undefined> {
-    return this.chores.get(id);
+    const [chore] = await db.select().from(chores).where(eq(chores.id, id));
+    return chore || undefined;
   }
 
   async createChore(chore: InsertChore): Promise<Chore> {
-    const newChore: Chore = { ...chore, id: this.currentChoreId++ };
-    this.chores.set(newChore.id, newChore);
+    const [newChore] = await db
+      .insert(chores)
+      .values(chore)
+      .returning();
     return newChore;
   }
 
   async updateChore(id: number, updates: Partial<Chore>): Promise<Chore | undefined> {
-    const chore = this.chores.get(id);
-    if (!chore) return undefined;
-    
-    const updatedChore = { ...chore, ...updates, id };
-    this.chores.set(id, updatedChore);
-    return updatedChore;
+    const [updatedChore] = await db
+      .update(chores)
+      .set(updates)
+      .where(eq(chores.id, id))
+      .returning();
+    return updatedChore || undefined;
   }
 
   async deleteChore(id: number): Promise<boolean> {
-    return this.chores.delete(id);
+    const result = await db.delete(chores).where(eq(chores.id, id));
+    return (result.rowCount ?? 0) > 0;
   }
 
   // Achievements
   async getAchievementsByKid(kidId: number): Promise<Achievement[]> {
-    return Array.from(this.achievements.values()).filter(achievement => achievement.kidId === kidId);
+    return await db.select().from(achievements).where(eq(achievements.kidId, kidId));
   }
 
   async createAchievement(achievement: InsertAchievement): Promise<Achievement> {
-    const newAchievement: Achievement = { ...achievement, id: this.currentAchievementId++ };
-    this.achievements.set(newAchievement.id, newAchievement);
+    const [newAchievement] = await db
+      .insert(achievements)
+      .values(achievement)
+      .returning();
     return newAchievement;
   }
 
   async updateAchievement(id: number, updates: Partial<Achievement>): Promise<Achievement | undefined> {
-    const achievement = this.achievements.get(id);
-    if (!achievement) return undefined;
-    
-    const updatedAchievement = { ...achievement, ...updates, id };
-    this.achievements.set(id, updatedAchievement);
-    return updatedAchievement;
+    const [updatedAchievement] = await db
+      .update(achievements)
+      .set(updates)
+      .where(eq(achievements.id, id))
+      .returning();
+    return updatedAchievement || undefined;
   }
 
   // Rewards
   async getAllRewards(): Promise<Reward[]> {
-    return Array.from(this.rewards.values());
+    return await db.select().from(rewards);
   }
 
   async createReward(reward: InsertReward): Promise<Reward> {
-    const newReward: Reward = { ...reward, id: this.currentRewardId++ };
-    this.rewards.set(newReward.id, newReward);
+    const [newReward] = await db
+      .insert(rewards)
+      .values(reward)
+      .returning();
     return newReward;
   }
 
   async updateReward(id: number, updates: Partial<Reward>): Promise<Reward | undefined> {
-    const reward = this.rewards.get(id);
-    if (!reward) return undefined;
-    
-    const updatedReward = { ...reward, ...updates, id };
-    this.rewards.set(id, updatedReward);
-    return updatedReward;
+    const [updatedReward] = await db
+      .update(rewards)
+      .set(updates)
+      .where(eq(rewards.id, id))
+      .returning();
+    return updatedReward || undefined;
   }
 
   async deleteReward(id: number): Promise<boolean> {
-    return this.rewards.delete(id);
+    const result = await db.delete(rewards).where(eq(rewards.id, id));
+    return (result.rowCount ?? 0) > 0;
   }
 
   // Special operations
   async resetWeeklyChores(): Promise<void> {
-    this.chores.forEach((chore, id) => {
-      if (chore.type === "weekly") {
-        this.chores.set(id, { ...chore, completed: false });
-      }
-    });
+    await db
+      .update(chores)
+      .set({ completed: false })
+      .where(eq(chores.type, "weekly"));
   }
 
   async awardStars(kidId: number, stars: number): Promise<void> {
-    const kid = this.kids.get(kidId);
+    const kid = await this.getKid(kidId);
     if (kid) {
-      this.kids.set(kidId, { ...kid, stars: kid.stars + stars });
+      await db
+        .update(kids)
+        .set({ stars: kid.stars + stars })
+        .where(eq(kids.id, kidId));
     }
   }
 }
 
-export const storage = new MemStorage();
+export const storage = new DatabaseStorage();
