@@ -15,13 +15,13 @@
         font-family: 'Arial', sans-serif;
         background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
         min-height: 100vh;
-        overflow: hidden;
+        overflow: auto;
         touch-action: manipulation;
       }
 
       .container {
         display: flex;
-        height: 100vh;
+        min-height: 100vh;
         width: 100vw;
       }
 
@@ -93,6 +93,7 @@
         background: rgba(255, 255, 255, 0.1);
         border-radius: 20px;
         margin-bottom: 10px;
+        max-height: 60vh;
       }
 
       .task-group {
@@ -224,6 +225,7 @@
         
         .child-section {
           padding: 15px;
+          min-height: 50vh;
         }
         
         .child-header {
@@ -238,6 +240,12 @@
         .avery-section {
           border-right: none;
           border-bottom: 4px solid #fff;
+        }
+      }
+
+      @media (min-width: 769px) {
+        .child-section {
+          min-height: 100vh;
         }
       }
     </style>
@@ -456,11 +464,10 @@
         weeklyTasks.forEach(task => {
           const isCompleted = childData.weeklyTasks[task] || false;
           const tile = createTaskTile(task, isCompleted, () => {
-            if (!isCompleted) {
-              childData.weeklyTasks[task] = true;
-              updateDisplay();
-              saveData(appData);
-            }
+            // Toggle the task completion
+            childData.weeklyTasks[task] = !isCompleted;
+            updateDisplay();
+            saveData(appData);
           });
           weeklyTasksContainer.appendChild(tile);
         });
@@ -475,11 +482,14 @@
           const taskKey = `${dayKey}-${task}`;
           const isCompleted = childData.dailyTasks[taskKey] || false;
           const tile = createTaskTile(task, isCompleted, () => {
-            if (!isCompleted) {
+            // Toggle the task completion
+            if (isCompleted) {
+              delete childData.dailyTasks[taskKey];
+            } else {
               childData.dailyTasks[taskKey] = true;
-              updateDisplay();
-              saveData(appData);
             }
+            updateDisplay();
+            saveData(appData);
           });
           dailyTasksContainer.appendChild(tile);
         });
@@ -576,19 +586,24 @@
 
       // Reset day function
       function resetDay() {
-        if (confirm('Reset today\'s tasks? This will clear all daily task completions for today.')) {
+        if (confirm('Reset today\'s tasks? This will clear all daily task completions for today and weekly chores.')) {
           const currentDate = new Date();
           const currentWeek = Math.floor(currentDate.getTime() / (1000 * 60 * 60 * 24 * 7));
           const currentDay = currentDate.getDay();
           const dayKey = `${currentWeek}-${currentDay}`;
           
-          // Reset only today's daily tasks
+          // Reset today's daily tasks and weekly chores
           ['avery', 'adyson'].forEach(childName => {
             const childData = appData[childName];
+            
+            // Reset daily tasks for today
             DAILY_EXTRAS.forEach(task => {
               const taskKey = `${dayKey}-${task}`;
               delete childData.dailyTasks[taskKey];
             });
+            
+            // Reset weekly chores
+            childData.weeklyTasks = {};
           });
           
           saveData(appData);
