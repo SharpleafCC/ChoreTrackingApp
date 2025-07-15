@@ -2,11 +2,647 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <title>Avery & Adyson's Chore Tracker</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: 'Arial', sans-serif;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        min-height: 100vh;
+        overflow: hidden;
+        touch-action: manipulation;
+      }
+
+      .container {
+        display: flex;
+        height: 100vh;
+        width: 100vw;
+      }
+
+      .child-section {
+        flex: 1;
+        padding: 20px;
+        display: flex;
+        flex-direction: column;
+        gap: 15px;
+      }
+
+      .avery-section {
+        background: linear-gradient(135deg, #ff9a9e 0%, #fecfef 100%);
+        border-right: 4px solid #fff;
+      }
+
+      .adyson-section {
+        background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);
+      }
+
+      .child-header {
+        text-align: center;
+        color: #333;
+        font-size: 2.5em;
+        font-weight: bold;
+        text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+        margin-bottom: 10px;
+      }
+
+      .week-info {
+        text-align: center;
+        font-size: 1.2em;
+        color: #555;
+        margin-bottom: 15px;
+      }
+
+      .stats {
+        display: flex;
+        justify-content: space-around;
+        margin-bottom: 20px;
+        flex-wrap: wrap;
+      }
+
+      .stat-item {
+        background: rgba(255, 255, 255, 0.9);
+        padding: 10px 15px;
+        border-radius: 15px;
+        text-align: center;
+        min-width: 120px;
+        margin: 5px;
+        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+      }
+
+      .stat-value {
+        font-size: 1.5em;
+        font-weight: bold;
+        color: #333;
+      }
+
+      .stat-label {
+        font-size: 0.9em;
+        color: #666;
+      }
+
+      .tasks-container {
+        flex: 1;
+        overflow-y: auto;
+        padding: 10px;
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 20px;
+        margin-bottom: 10px;
+      }
+
+      .task-group {
+        margin-bottom: 25px;
+      }
+
+      .task-group-title {
+        font-size: 1.4em;
+        font-weight: bold;
+        color: #333;
+        margin-bottom: 10px;
+        text-align: center;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+      }
+
+      .task-tile {
+        background: rgba(255, 255, 255, 0.95);
+        border: none;
+        border-radius: 15px;
+        padding: 20px;
+        margin: 8px 0;
+        font-size: 1.3em;
+        font-weight: bold;
+        color: #333;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        width: 100%;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        touch-action: manipulation;
+        user-select: none;
+      }
+
+      .task-tile:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 16px rgba(0,0,0,0.2);
+      }
+
+      .task-tile:active {
+        transform: translateY(0);
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      }
+
+      .task-tile.completed {
+        background: rgba(200, 200, 200, 0.6);
+        color: #888;
+        transform: none;
+        box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+      }
+
+      .task-tile.completed:hover {
+        transform: none;
+      }
+
+      .bonus-indicator {
+        text-align: center;
+        font-size: 1.1em;
+        font-weight: bold;
+        padding: 10px;
+        border-radius: 10px;
+        margin-top: 10px;
+      }
+
+      .bonus-available {
+        background: rgba(76, 175, 80, 0.2);
+        color: #2E7D32;
+        border: 2px solid #4CAF50;
+      }
+
+      .bonus-earned {
+        background: rgba(255, 193, 7, 0.2);
+        color: #F57C00;
+        border: 2px solid #FFC107;
+      }
+
+      .admin-controls {
+        position: fixed;
+        bottom: 20px;
+        right: 20px;
+        display: flex;
+        gap: 10px;
+        z-index: 1000;
+      }
+
+      .admin-btn {
+        background: #ff4757;
+        color: white;
+        border: none;
+        padding: 12px 20px;
+        border-radius: 25px;
+        font-size: 1em;
+        font-weight: bold;
+        cursor: pointer;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+        transition: all 0.3s ease;
+      }
+
+      .admin-btn:hover {
+        background: #ff3838;
+        transform: translateY(-2px);
+      }
+
+      .admin-btn.approve {
+        background: #2ed573;
+      }
+
+      .admin-btn.approve:hover {
+        background: #17b978;
+      }
+
+      .progress-bar {
+        height: 6px;
+        background: rgba(255, 255, 255, 0.3);
+        border-radius: 3px;
+        overflow: hidden;
+        margin-top: 5px;
+      }
+
+      .progress-fill {
+        height: 100%;
+        background: #4CAF50;
+        transition: width 0.3s ease;
+      }
+
+      @media (max-width: 768px) {
+        .container {
+          flex-direction: column;
+        }
+        
+        .child-section {
+          padding: 15px;
+        }
+        
+        .child-header {
+          font-size: 2em;
+        }
+        
+        .task-tile {
+          font-size: 1.1em;
+          padding: 15px;
+        }
+        
+        .avery-section {
+          border-right: none;
+          border-bottom: 4px solid #fff;
+        }
+      }
+    </style>
   </head>
   <body>
-    <div id="root"></div>
-    <script type="module" src="/src/main.tsx"></script>
+    <div class="container">
+      <!-- Avery's Section -->
+      <div class="child-section avery-section">
+        <h1 class="child-header">AVERY</h1>
+        <div class="week-info">
+          <span id="avery-week-type">Week A</span>
+        </div>
+        <div class="stats">
+          <div class="stat-item">
+            <div class="stat-value" id="avery-points">0</div>
+            <div class="stat-label">Points</div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-value" id="avery-earnings">$0</div>
+            <div class="stat-label">This Week</div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-value" id="avery-streak">0</div>
+            <div class="stat-label">Day Streak</div>
+          </div>
+        </div>
+        
+        <div class="tasks-container">
+          <div class="task-group">
+            <div class="task-group-title">Weekly Chores</div>
+            <div id="avery-weekly-tasks"></div>
+          </div>
+          
+          <div class="task-group">
+            <div class="task-group-title">Daily Extras</div>
+            <div id="avery-daily-tasks"></div>
+          </div>
+        </div>
+        
+        <div id="avery-bonus" class="bonus-indicator" style="display: none;"></div>
+      </div>
+
+      <!-- Adyson's Section -->
+      <div class="child-section adyson-section">
+        <h1 class="child-header">ADYSON</h1>
+        <div class="week-info">
+          <span id="adyson-week-type">Week B</span>
+        </div>
+        <div class="stats">
+          <div class="stat-item">
+            <div class="stat-value" id="adyson-points">0</div>
+            <div class="stat-label">Points</div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-value" id="adyson-earnings">$0</div>
+            <div class="stat-label">This Week</div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-value" id="adyson-streak">0</div>
+            <div class="stat-label">Day Streak</div>
+          </div>
+        </div>
+        
+        <div class="tasks-container">
+          <div class="task-group">
+            <div class="task-group-title">Weekly Chores</div>
+            <div id="adyson-weekly-tasks"></div>
+          </div>
+          
+          <div class="task-group">
+            <div class="task-group-title">Daily Extras</div>
+            <div id="adyson-daily-tasks"></div>
+          </div>
+        </div>
+        
+        <div id="adyson-bonus" class="bonus-indicator" style="display: none;"></div>
+      </div>
+    </div>
+
+    <div class="admin-controls">
+      <button class="admin-btn" onclick="resetDay()">Reset Day</button>
+      <button class="admin-btn approve" id="approve-btn" onclick="approveWeek()" style="display: none;">Approve Week</button>
+    </div>
+
+    <script>
+      // Configuration
+      const CHORE_LISTS = {
+        A: ['Litter Box', 'Dishes', 'Kitchen Floors'],
+        B: ['Bathrooms', 'Living Room Floors', 'Cat Water']
+      };
+
+      const DAILY_EXTRAS = ['Practice', 'Stretch', 'Exercise'];
+
+      // Get current week type (A or B) based on a reference date
+      function getCurrentWeekType() {
+        const referenceDate = new Date('2024-01-01'); // Monday of a reference week A
+        const now = new Date();
+        const daysSinceReference = Math.floor((now - referenceDate) / (1000 * 60 * 60 * 24));
+        const weeksSinceReference = Math.floor(daysSinceReference / 7);
+        return weeksSinceReference % 2 === 0 ? 'A' : 'B';
+      }
+
+      // Get current day of week (0 = Sunday, 1 = Monday, etc.)
+      function getCurrentDay() {
+        return new Date().getDay();
+      }
+
+      // Get current date string
+      function getCurrentDateString() {
+        return new Date().toDateString();
+      }
+
+      // Storage functions
+      function saveData(data) {
+        localStorage.setItem('choreTracker', JSON.stringify(data));
+      }
+
+      function loadData() {
+        const saved = localStorage.getItem('choreTracker');
+        if (saved) {
+          return JSON.parse(saved);
+        }
+        return {
+          avery: {
+            points: 0,
+            weeklyTasks: {},
+            dailyTasks: {},
+            lastResetDate: getCurrentDateString(),
+            currentWeek: getCurrentWeekType(),
+            streak: 0,
+            weeklyComplete: false,
+            bonusEarned: false
+          },
+          adyson: {
+            points: 0,
+            weeklyTasks: {},
+            dailyTasks: {},
+            lastResetDate: getCurrentDateString(),
+            currentWeek: getCurrentWeekType() === 'A' ? 'B' : 'A',
+            streak: 0,
+            weeklyComplete: false,
+            bonusEarned: false
+          }
+        };
+      }
+
+      // Initialize data
+      let appData = loadData();
+
+      // Check if we need to reset for new day
+      function checkDailyReset() {
+        const currentDate = getCurrentDateString();
+        const currentWeek = getCurrentWeekType();
+        
+        if (appData.avery.lastResetDate !== currentDate) {
+          // Reset daily tasks
+          appData.avery.dailyTasks = {};
+          appData.adyson.dailyTasks = {};
+          appData.avery.lastResetDate = currentDate;
+          appData.adyson.lastResetDate = currentDate;
+          
+          // Check if week changed
+          if (appData.avery.currentWeek !== currentWeek) {
+            appData.avery.currentWeek = currentWeek;
+            appData.adyson.currentWeek = currentWeek === 'A' ? 'B' : 'A';
+            appData.avery.weeklyTasks = {};
+            appData.adyson.weeklyTasks = {};
+            appData.avery.weeklyComplete = false;
+            appData.adyson.weeklyComplete = false;
+            appData.avery.bonusEarned = false;
+            appData.adyson.bonusEarned = false;
+          }
+          
+          saveData(appData);
+        }
+      }
+
+      // Create task tile
+      function createTaskTile(taskName, isCompleted, onClick) {
+        const tile = document.createElement('button');
+        tile.className = `task-tile ${isCompleted ? 'completed' : ''}`;
+        tile.textContent = taskName;
+        tile.onclick = onClick;
+        return tile;
+      }
+
+      // Check if all daily tasks are complete for the week
+      function checkWeeklyDailyCompletion(childData) {
+        const currentDate = new Date();
+        const currentWeek = Math.floor(currentDate.getTime() / (1000 * 60 * 60 * 24 * 7));
+        
+        // Check if all daily tasks are completed for each day this week
+        for (let day = 0; day < 7; day++) {
+          const dayKey = `${currentWeek}-${day}`;
+          for (const task of DAILY_EXTRAS) {
+            if (!childData.dailyTasks[`${dayKey}-${task}`]) {
+              return false;
+            }
+          }
+        }
+        return true;
+      }
+
+      // Update child's tasks display
+      function updateChildTasks(childName) {
+        const childData = appData[childName.toLowerCase()];
+        const weeklyTasksContainer = document.getElementById(`${childName.toLowerCase()}-weekly-tasks`);
+        const dailyTasksContainer = document.getElementById(`${childName.toLowerCase()}-daily-tasks`);
+        
+        // Clear containers
+        weeklyTasksContainer.innerHTML = '';
+        dailyTasksContainer.innerHTML = '';
+        
+        // Weekly tasks
+        const weeklyTasks = CHORE_LISTS[childData.currentWeek];
+        weeklyTasks.forEach(task => {
+          const isCompleted = childData.weeklyTasks[task] || false;
+          const tile = createTaskTile(task, isCompleted, () => {
+            if (!isCompleted) {
+              childData.weeklyTasks[task] = true;
+              updateDisplay();
+              saveData(appData);
+            }
+          });
+          weeklyTasksContainer.appendChild(tile);
+        });
+        
+        // Daily tasks
+        const currentDate = new Date();
+        const currentWeek = Math.floor(currentDate.getTime() / (1000 * 60 * 60 * 24 * 7));
+        const currentDay = currentDate.getDay();
+        const dayKey = `${currentWeek}-${currentDay}`;
+        
+        DAILY_EXTRAS.forEach(task => {
+          const taskKey = `${dayKey}-${task}`;
+          const isCompleted = childData.dailyTasks[taskKey] || false;
+          const tile = createTaskTile(task, isCompleted, () => {
+            if (!isCompleted) {
+              childData.dailyTasks[taskKey] = true;
+              updateDisplay();
+              saveData(appData);
+            }
+          });
+          dailyTasksContainer.appendChild(tile);
+        });
+      }
+
+      // Calculate earnings
+      function calculateEarnings(childData) {
+        let earnings = 0;
+        
+        // Check weekly chores completion
+        const weeklyTasks = CHORE_LISTS[childData.currentWeek];
+        const weeklyComplete = weeklyTasks.every(task => childData.weeklyTasks[task]);
+        
+        if (weeklyComplete) {
+          earnings += 16; // Base allowance
+          childData.weeklyComplete = true;
+        }
+        
+        // Check daily extras bonus
+        if (checkWeeklyDailyCompletion(childData) && !childData.bonusEarned) {
+          earnings += 4; // Bonus
+          childData.points += 1; // Merch point
+          childData.bonusEarned = true;
+        }
+        
+        return earnings;
+      }
+
+      // Update bonus indicator
+      function updateBonusIndicator(childName) {
+        const childData = appData[childName.toLowerCase()];
+        const bonusElement = document.getElementById(`${childName.toLowerCase()}-bonus`);
+        
+        if (childData.bonusEarned) {
+          bonusElement.textContent = '🎉 Bonus Earned! +$4 & +1 Point';
+          bonusElement.className = 'bonus-indicator bonus-earned';
+          bonusElement.style.display = 'block';
+        } else if (checkWeeklyDailyCompletion(childData)) {
+          bonusElement.textContent = '⭐ Bonus Available! Complete all daily tasks this week';
+          bonusElement.className = 'bonus-indicator bonus-available';
+          bonusElement.style.display = 'block';
+        } else {
+          bonusElement.style.display = 'none';
+        }
+      }
+
+      // Update display
+      function updateDisplay() {
+        checkDailyReset();
+        
+        ['avery', 'adyson'].forEach(childName => {
+          const childData = appData[childName];
+          
+          // Update week type
+          document.getElementById(`${childName}-week-type`).textContent = `Week ${childData.currentWeek}`;
+          
+          // Update stats
+          document.getElementById(`${childName}-points`).textContent = childData.points;
+          document.getElementById(`${childName}-earnings`).textContent = `$${calculateEarnings(childData)}`;
+          
+          // Update streak (simplified - just count consecutive days with all daily tasks)
+          const currentDate = new Date();
+          const currentWeek = Math.floor(currentDate.getTime() / (1000 * 60 * 60 * 24 * 7));
+          const currentDay = currentDate.getDay();
+          let streak = 0;
+          
+          for (let day = currentDay; day >= 0; day--) {
+            const dayKey = `${currentWeek}-${day}`;
+            const dayComplete = DAILY_EXTRAS.every(task => childData.dailyTasks[`${dayKey}-${task}`]);
+            if (dayComplete) {
+              streak++;
+            } else {
+              break;
+            }
+          }
+          
+          document.getElementById(`${childName}-streak`).textContent = streak;
+          
+          // Update tasks
+          updateChildTasks(childName);
+          
+          // Update bonus indicator
+          updateBonusIndicator(childName);
+        });
+        
+        // Show approve button on Sundays
+        const approveBtn = document.getElementById('approve-btn');
+        if (getCurrentDay() === 0) { // Sunday
+          approveBtn.style.display = 'block';
+        } else {
+          approveBtn.style.display = 'none';
+        }
+      }
+
+      // Reset day function
+      function resetDay() {
+        if (confirm('Reset today\'s tasks? This will clear all daily task completions for today.')) {
+          const currentDate = new Date();
+          const currentWeek = Math.floor(currentDate.getTime() / (1000 * 60 * 60 * 24 * 7));
+          const currentDay = currentDate.getDay();
+          const dayKey = `${currentWeek}-${currentDay}`;
+          
+          // Reset only today's daily tasks
+          ['avery', 'adyson'].forEach(childName => {
+            const childData = appData[childName];
+            DAILY_EXTRAS.forEach(task => {
+              const taskKey = `${dayKey}-${task}`;
+              delete childData.dailyTasks[taskKey];
+            });
+          });
+          
+          saveData(appData);
+          updateDisplay();
+        }
+      }
+
+      // Approve week function
+      function approveWeek() {
+        if (confirm('Approve and reset the week? This will reset all tasks and earnings.')) {
+          // Reset all data for new week
+          appData.avery.weeklyTasks = {};
+          appData.avery.dailyTasks = {};
+          appData.avery.weeklyComplete = false;
+          appData.avery.bonusEarned = false;
+          
+          appData.adyson.weeklyTasks = {};
+          appData.adyson.dailyTasks = {};
+          appData.adyson.weeklyComplete = false;
+          appData.adyson.bonusEarned = false;
+          
+          // Swap week types
+          const temp = appData.avery.currentWeek;
+          appData.avery.currentWeek = appData.adyson.currentWeek;
+          appData.adyson.currentWeek = temp;
+          
+          saveData(appData);
+          updateDisplay();
+          
+          alert('Week approved and reset! Tasks have been swapped.');
+        }
+      }
+
+      // Initialize app
+      checkDailyReset();
+      updateDisplay();
+
+      // Auto-refresh every minute to check for day changes
+      setInterval(() => {
+        checkDailyReset();
+        updateDisplay();
+      }, 60000);
+
+      // Prevent zoom on double tap
+      let lastTouchEnd = 0;
+      document.addEventListener('touchend', function (event) {
+        const now = (new Date()).getTime();
+        if (now - lastTouchEnd <= 300) {
+          event.preventDefault();
+        }
+        lastTouchEnd = now;
+      }, false);
+    </script>
+    
     <!-- This is a replit script which adds a banner on the top of the page when opened in development mode outside the replit environment -->
     <script type="text/javascript" src="https://replit.com/public/js/replit-dev-banner.js"></script>
   </body>
