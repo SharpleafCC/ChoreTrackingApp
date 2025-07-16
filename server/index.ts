@@ -1,5 +1,8 @@
 // Load environment variables FIRST, before any other imports
-import "dotenv/config";
+import { config } from "dotenv";
+
+// Force load .env file and override any existing environment variables
+config({ override: true });
 
 import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes";
