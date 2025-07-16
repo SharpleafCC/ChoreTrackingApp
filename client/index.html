@@ -74,10 +74,10 @@
 
     .stat-item {
       background: rgba(255, 255, 255, 0.9);
-      padding: 10px 15px;
+      padding: 10px 10px;
       border-radius: 15px;
       text-align: center;
-      min-width: 100px;
+      /* min-width: 50px; */
       margin: 5px;
       box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
     }
@@ -100,7 +100,7 @@
       background: rgba(255, 255, 255, 0.1);
       border-radius: 20px;
       margin-bottom: 15px;
-      max-height: 60vh;
+      /* max-height: 60vh; */
     }
 
     .task-group {
@@ -119,7 +119,7 @@
 
     .task-list {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
       gap: 12px;
       padding: 15px;
     }
@@ -136,7 +136,8 @@
       box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
       display: flex;
       align-items: center;
-      gap: 12px;
+      justify-content: center;
+      text-align: center;
       min-height: 60px;
       position: relative;
       overflow: hidden;
@@ -202,32 +203,7 @@
       animation: bounce 0.6s ease;
     }
 
-    .task-checkbox {
-      width: 24px;
-      height: 24px;
-      border: 3px solid #4CAF50;
-      border-radius: 6px;
-      margin-right: 12px;
-      position: relative;
-      cursor: pointer;
-      transition: all 0.3s ease;
-    }
 
-    .task-checkbox.completed {
-      background: #4CAF50;
-      border-color: #4CAF50;
-    }
-
-    .task-checkbox.completed::after {
-      content: '✓';
-      position: absolute;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      color: white;
-      font-weight: bold;
-      font-size: 16px;
-    }
 
     .task-name {
       flex: 1;
@@ -287,23 +263,62 @@
       position: fixed;
       bottom: 20px;
       right: 20px;
-      display: flex;
-      gap: 10px;
       z-index: 1000;
+    }
+
+    .admin-toggle {
+      background: #666;
+      color: white;
+      border: none;
+      padding: 12px;
+      border-radius: 50%;
+      font-size: 1.2em;
+      cursor: pointer;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+      transition: all 0.3s ease;
+      width: 50px;
+      height: 50px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .admin-toggle:hover {
+      background: #555;
+      transform: scale(1.1);
+    }
+
+    .admin-menu {
+      position: absolute;
+      bottom: 60px;
+      right: 0;
+      display: flex;
       flex-direction: column;
+      gap: 10px;
+      opacity: 0;
+      visibility: hidden;
+      transform: translateY(20px);
+      transition: all 0.3s ease;
+    }
+
+    .admin-menu.open {
+      opacity: 1;
+      visibility: visible;
+      transform: translateY(0);
     }
 
     .admin-btn {
       background: #ff4757;
       color: white;
       border: none;
-      padding: 12px 20px;
-      border-radius: 25px;
-      font-size: 1em;
+      padding: 10px 16px;
+      border-radius: 20px;
+      font-size: 0.9em;
       font-weight: bold;
       cursor: pointer;
       box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
       transition: all 0.3s ease;
+      white-space: nowrap;
     }
 
     .admin-btn:hover {
@@ -325,8 +340,9 @@
       }
 
       .child-section {
-        padding: 15px;
+        padding: 10px;
         min-height: 50vh;
+        gap: 10px;
       }
 
       .child-header {
@@ -340,15 +356,29 @@
 
       .stats {
         justify-content: center;
+        flex-wrap: nowrap;
+        gap: 5px;
       }
 
       .stat-item {
-        min-width: 80px;
-        padding: 8px 10px;
+        min-width: 70px;
+        padding: 6px 8px;
+        margin: 2px;
+        flex: 1;
+        max-width: 85px;
+      }
+
+      .stat-value {
+        font-size: 1.1em;
+      }
+
+      .stat-label {
+        font-size: 0.7em;
       }
 
       .tasks-container {
-        max-height: 50vh;
+        max-height: calc(100vh - 280px);
+        padding: 10px;
       }
 
       .task-list {
@@ -360,6 +390,17 @@
         min-height: 50px;
         padding: 12px;
         font-size: 0.9em;
+      }
+
+      .admin-toggle {
+        width: 55px;
+        height: 55px;
+        font-size: 1.4em;
+      }
+
+      .admin-btn {
+        padding: 12px 18px;
+        font-size: 1em;
       }
     }
 
@@ -377,14 +418,19 @@
   </div>
 
   <div class="admin-controls">
-    <button class="admin-btn switch" onclick="switchLists()">Switch A/B Lists</button>
-    <button class="admin-btn" onclick="refreshData()">Refresh</button>
+    <button class="admin-toggle" onclick="toggleAdminMenu()">⚙️</button>
+    <div class="admin-menu" id="admin-menu">
+      <button class="admin-btn switch" onclick="switchLists()">Switch A/B Lists</button>
+      <button class="admin-btn" onclick="refreshData()">Refresh</button>
+    </div>
   </div>
 
   <script>
     // Global app state
     let kids = [];
     const today = new Date().toISOString().split('T')[0];
+    let updateInProgress = false;
+    let updateQueued = false;
 
     // API helper functions
     async function apiCall(method, url, data = null) {
@@ -426,6 +472,31 @@
       }
     }
 
+    // Debounced update function to prevent rapid rebuilds
+    async function debouncedUpdate() {
+      if (updateInProgress) {
+        updateQueued = true;
+        return;
+      }
+
+      updateInProgress = true;
+      updateQueued = false;
+
+      try {
+        await loadDataFromDatabase();
+        updateDisplay();
+      } catch (error) {
+        console.error('Failed to update data:', error);
+      }
+
+      updateInProgress = false;
+
+      // If another update was queued while we were processing, run it
+      if (updateQueued) {
+        setTimeout(debouncedUpdate, 100);
+      }
+    }
+
     // Toggle individual task completion
     async function toggleTask(kidId, taskType, taskId, taskElement) {
       try {
@@ -444,9 +515,8 @@
           taskElement.classList.remove('success');
         }, 600);
 
-        // Update data and display
-        await loadDataFromDatabase();
-        updateDisplay();
+        // Queue update instead of immediate rebuild
+        debouncedUpdate();
       } catch (error) {
         console.error('Failed to toggle task:', error);
         // Remove loading state on error
@@ -460,21 +530,19 @@
         try {
           const result = await apiCall('POST', '/api/admin/switch-lists');
           console.log(result.message);
-          await loadDataFromDatabase();
-          updateDisplay();
+          debouncedUpdate();
         } catch (error) {
           console.error('Failed to switch lists:', error);
         }
       }
     }
 
-    // Create task item with checkbox
+    // Create task item
     function createTaskItem(task, kidId, taskType) {
       const item = document.createElement('div');
       item.className = `task-item ${task.completed ? 'completed' : ''}`;
 
       item.innerHTML = `
-        <div class="task-checkbox ${task.completed ? 'completed' : ''}"></div>
         <div class="task-name">${task.chore_name || task.task_name}</div>
       `;
 
@@ -494,7 +562,7 @@
 
       section.innerHTML = `
           <h1 class="child-header">${kid.name.toUpperCase()}</h1>
-          <div class="list-indicator">Currently on List ${kid.current_list}</div>
+          <!-- <div class="list-indicator">Currently on List ${kid.current_list}</div> -->
           
           <div class="stats">
             <div class="stat-item">
@@ -545,8 +613,33 @@
       return section;
     }
 
+    // Save scroll positions before update
+    function saveScrollPositions() {
+      const scrollPositions = {};
+      kids.forEach(kid => {
+        const taskContainer = document.querySelector(`#chores-${kid.id}`)?.closest('.tasks-container');
+        if (taskContainer) {
+          scrollPositions[kid.id] = taskContainer.scrollTop;
+        }
+      });
+      return scrollPositions;
+    }
+
+    // Restore scroll positions after update
+    function restoreScrollPositions(scrollPositions) {
+      setTimeout(() => {
+        kids.forEach(kid => {
+          const taskContainer = document.querySelector(`#chores-${kid.id}`)?.closest('.tasks-container');
+          if (taskContainer && scrollPositions[kid.id] !== undefined) {
+            taskContainer.scrollTop = scrollPositions[kid.id];
+          }
+        });
+      }, 50); // Small delay to ensure DOM is updated
+    }
+
     // Update display
     function updateDisplay() {
+      const scrollPositions = saveScrollPositions();
       const container = document.getElementById('app-container');
       container.innerHTML = '';
 
@@ -554,12 +647,31 @@
         const section = createKidSection(kid);
         container.appendChild(section);
       });
+
+      restoreScrollPositions(scrollPositions);
     }
 
     // Refresh data
     async function refreshData() {
-      await loadDataFromDatabase();
-      updateDisplay();
+      debouncedUpdate();
+    }
+
+    // Toggle admin menu
+    function toggleAdminMenu() {
+      const menu = document.getElementById('admin-menu');
+      menu.classList.toggle('open');
+
+      // Close menu when clicking elsewhere
+      if (menu.classList.contains('open')) {
+        setTimeout(() => {
+          document.addEventListener('click', function closeMenu(e) {
+            if (!e.target.closest('.admin-controls')) {
+              menu.classList.remove('open');
+              document.removeEventListener('click', closeMenu);
+            }
+          });
+        }, 100);
+      }
     }
 
     // Initialize app
@@ -568,9 +680,8 @@
       updateDisplay();
 
       // Auto-refresh every 60 seconds
-      setInterval(async () => {
-        await loadDataFromDatabase();
-        updateDisplay();
+      setInterval(() => {
+        debouncedUpdate();
       }, 60000);
     }
 
