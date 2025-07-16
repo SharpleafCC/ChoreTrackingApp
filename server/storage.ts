@@ -4,6 +4,7 @@ import {
   extraTasks,
   taskCompletions,
   dailyProgress,
+  settings,
   type Kid,
   type InsertKid,
   type ChoreList,
@@ -14,6 +15,8 @@ import {
   type InsertTaskCompletion,
   type DailyProgress,
   type InsertDailyProgress,
+  type Settings,
+  type InsertSettings,
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, and, asc } from "drizzle-orm";
@@ -29,11 +32,21 @@ export interface IStorage {
   // Chore Lists (with active state management)
   getActiveChoreList(listName: string): Promise<ChoreList[]>; // Get active chores for A or B list
   getKidActiveChores(kidId: number): Promise<ChoreList[]>; // Get active chores for kid's current list
+  getAllChores(): Promise<ChoreList[]>; // Get all chores (active and inactive)
+  updateChore(
+    choreId: number,
+    updates: Partial<ChoreList>
+  ): Promise<ChoreList | undefined>; // Update chore
   deactivateChore(choreId: number): Promise<void>; // Deactivate instead of delete
   addChore(chore: InsertChoreList): Promise<ChoreList>; // Add new chore
 
   // Extra Tasks (per-kid with active state)
   getKidActiveExtraTasks(kidId: number): Promise<ExtraTask[]>; // Get active extra tasks for specific kid
+  getAllExtraTasks(): Promise<ExtraTask[]>; // Get all extra tasks (active and inactive)
+  updateExtraTask(
+    taskId: number,
+    updates: Partial<ExtraTask>
+  ): Promise<ExtraTask | undefined>; // Update extra task
   deactivateExtraTask(taskId: number): Promise<void>; // Deactivate instead of delete
   addExtraTask(task: InsertExtraTask): Promise<ExtraTask>; // Add new extra task
 
@@ -57,6 +70,11 @@ export interface IStorage {
     taskId: number,
     date: string
   ): Promise<boolean>;
+  getTaskHistory(
+    kidId?: number,
+    startDate?: string,
+    endDate?: string
+  ): Promise<any[]>; // Get task completion history
 
   // Daily Progress (computed from individual completions)
   computeDailyProgress(
@@ -67,6 +85,11 @@ export interface IStorage {
     extraTasksCompleted: boolean;
     pointsEarned: number;
   }>;
+
+  // Settings
+  getSetting(key: string): Promise<string | null>; // Get a setting value by key
+  setSetting(key: string, value: string): Promise<Settings>; // Set/update a setting value
+  initializeDefaultSettings(): Promise<void>; // Initialize default settings if they don't exist
 }
 
 class DatabaseStorage implements IStorage {
@@ -131,6 +154,22 @@ class DatabaseStorage implements IStorage {
       .where(eq(choreLists.id, choreId));
   }
 
+  async getAllChores(): Promise<ChoreList[]> {
+    return await db.select().from(choreLists).orderBy(asc(choreLists.id));
+  }
+
+  async updateChore(
+    choreId: number,
+    updates: Partial<ChoreList>
+  ): Promise<ChoreList | undefined> {
+    const result = await db
+      .update(choreLists)
+      .set(updates)
+      .where(eq(choreLists.id, choreId))
+      .returning();
+    return result[0];
+  }
+
   async addChore(chore: InsertChoreList): Promise<ChoreList> {
     const result = await db.insert(choreLists).values(chore).returning();
     return result[0];
@@ -149,6 +188,22 @@ class DatabaseStorage implements IStorage {
       .update(extraTasks)
       .set({ active: false })
       .where(eq(extraTasks.id, taskId));
+  }
+
+  async getAllExtraTasks(): Promise<ExtraTask[]> {
+    return await db.select().from(extraTasks).orderBy(asc(extraTasks.id));
+  }
+
+  async updateExtraTask(
+    taskId: number,
+    updates: Partial<ExtraTask>
+  ): Promise<ExtraTask | undefined> {
+    const result = await db
+      .update(extraTasks)
+      .set(updates)
+      .where(eq(extraTasks.id, taskId))
+      .returning();
+    return result[0];
   }
 
   async addExtraTask(task: InsertExtraTask): Promise<ExtraTask> {
@@ -303,6 +358,65 @@ class DatabaseStorage implements IStorage {
     const pointsEarned = extraTasksCompleted ? 1 : 0;
 
     return { choresCompleted, extraTasksCompleted, pointsEarned };
+  }
+
+  async getTaskHistory(
+    kidId?: number,
+    startDate?: string,
+    endDate?: string
+  ): Promise<any[]> {
+    if (kidId) {
+      return await db
+        .select()
+        .from(taskCompletions)
+        .where(eq(taskCompletions.kid_id, kidId))
+        .orderBy(asc(taskCompletions.completed_at));
+    } else {
+      return await db
+        .select()
+        .from(taskCompletions)
+        .orderBy(asc(taskCompletions.completed_at));
+    }
+  }
+
+  // Settings
+  async getSetting(key: string): Promise<string | null> {
+    const result = await db
+      .select()
+      .from(settings)
+      .where(eq(settings.key, key))
+      .limit(1);
+    return result.length > 0 ? result[0].value : null;
+  }
+
+  async setSetting(key: string, value: string): Promise<Settings> {
+    // Use upsert: try to update, if not exists then insert
+    const existing = await this.getSetting(key);
+
+    if (existing !== null) {
+      // Update existing setting
+      const result = await db
+        .update(settings)
+        .set({ value, updated_at: new Date() })
+        .where(eq(settings.key, key))
+        .returning();
+      return result[0];
+    } else {
+      // Insert new setting
+      const result = await db
+        .insert(settings)
+        .values({ key, value })
+        .returning();
+      return result[0];
+    }
+  }
+
+  async initializeDefaultSettings(): Promise<void> {
+    // Initialize admin PIN if it doesn't exist
+    const adminPin = await this.getSetting("admin_pin");
+    if (adminPin === null) {
+      await this.setSetting("admin_pin", "1234"); // Default PIN
+    }
   }
 }
 

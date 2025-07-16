@@ -266,6 +266,267 @@
       z-index: 1000;
     }
 
+    .admin-view {
+      display: none;
+      padding: 20px;
+      background: rgba(255, 255, 255, 0.95);
+      min-height: 100vh;
+      overflow-y: auto;
+    }
+
+    .admin-view.active {
+      display: block;
+    }
+
+    .admin-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 30px;
+      padding-bottom: 15px;
+      border-bottom: 2px solid #ddd;
+    }
+
+    .admin-nav {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+
+    .admin-nav-btn {
+      background: #f0f0f0;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+
+    .admin-nav-btn.active {
+      background: #3742fa;
+      color: white;
+    }
+
+    .admin-section {
+      display: none;
+      background: white;
+      border-radius: 12px;
+      padding: 20px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    }
+
+    .admin-section.active {
+      display: block;
+    }
+
+    .form-group {
+      margin-bottom: 15px;
+    }
+
+    .form-group label {
+      display: block;
+      margin-bottom: 5px;
+      font-weight: bold;
+    }
+
+    .form-group input,
+    .form-group select {
+      width: 100%;
+      padding: 8px 12px;
+      border: 1px solid #ddd;
+      border-radius: 6px;
+      font-size: 14px;
+    }
+
+    .btn {
+      background: #3742fa;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 6px;
+      cursor: pointer;
+      margin-right: 10px;
+      margin-bottom: 10px;
+    }
+
+    .btn:hover {
+      background: #2f3542;
+    }
+
+    .btn-danger {
+      background: #ff4757;
+    }
+
+    .btn-danger:hover {
+      background: #ff3838;
+    }
+
+    .history-date {
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      margin-bottom: 10px;
+      overflow: hidden;
+    }
+
+    .history-date-header {
+      background: #f8f9fa;
+      padding: 15px;
+      cursor: pointer;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      transition: background-color 0.2s ease;
+    }
+
+    .history-date-header:hover {
+      background: #e9ecef;
+    }
+
+    .history-date-header.expanded {
+      background: #e3f2fd;
+    }
+
+    .history-date-title {
+      font-weight: bold;
+      font-size: 1.1em;
+    }
+
+    .history-status {
+      display: flex;
+      gap: 15px;
+      align-items: center;
+    }
+
+    .status-item {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 0.9em;
+    }
+
+    .status-icon {
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-size: 0.8em;
+    }
+
+    .status-complete {
+      background: #4CAF50;
+    }
+
+    .status-incomplete {
+      background: #ff9800;
+    }
+
+    .expand-icon {
+      transition: transform 0.2s ease;
+    }
+
+    .expand-icon.expanded {
+      transform: rotate(180deg);
+    }
+
+    .history-details {
+      display: none;
+      padding: 15px;
+      background: white;
+      border-top: 1px solid #eee;
+    }
+
+    .history-details.expanded {
+      display: block;
+    }
+
+    .kid-section {
+      margin-bottom: 20px;
+    }
+
+    .kid-section h4 {
+      margin-bottom: 10px;
+      color: #333;
+      border-bottom: 1px solid #eee;
+      padding-bottom: 5px;
+    }
+
+    .task-detail {
+      padding: 8px 12px;
+      margin: 5px 0;
+      border-radius: 6px;
+      background: #f8f9fa;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .task-detail.completed {
+      background: #e8f5e8;
+      border-left: 4px solid #4CAF50;
+    }
+
+    .task-detail.incomplete {
+      background: #fff3e0;
+      border-left: 4px solid #ff9800;
+    }
+
+    .chore-item,
+    .task-item-admin {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 10px;
+      border: 1px solid #ddd;
+      border-radius: 6px;
+      margin-bottom: 10px;
+    }
+
+    .inactive {
+      opacity: 0.5;
+      background: #f5f5f5;
+    }
+
+    .item-content {
+      flex: 1;
+      display: flex;
+      align-items: center;
+    }
+
+    .item-actions {
+      display: flex;
+      gap: 5px;
+      align-items: center;
+    }
+
+    .editable-name {
+      background: none;
+      border: none;
+      font-size: 14px;
+      padding: 5px;
+      border-radius: 4px;
+      cursor: pointer;
+      width: 100%;
+    }
+
+    .editable-name:hover {
+      background: #f0f0f0;
+    }
+
+    .editable-name:focus {
+      background: white;
+      border: 1px solid #3742fa;
+      outline: none;
+      cursor: text;
+    }
+
+    .btn-small {
+      padding: 5px 10px;
+      font-size: 0.8em;
+    }
+
     .admin-toggle {
       background: #666;
       color: white;
@@ -409,19 +670,252 @@
         min-height: 100vh;
       }
     }
+
+    /* PIN Authentication Overlay */
+    .pin-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.8);
+      backdrop-filter: blur(5px);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 10000;
+    }
+
+    .pin-overlay.active {
+      display: flex;
+    }
+
+    .pin-modal {
+      background: white;
+      border-radius: 16px;
+      padding: 30px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+      text-align: center;
+      max-width: 400px;
+      width: 90%;
+      animation: pinModalFadeIn 0.3s ease-out;
+    }
+
+    @keyframes pinModalFadeIn {
+      from {
+        opacity: 0;
+        transform: scale(0.9) translateY(-20px);
+      }
+
+      to {
+        opacity: 1;
+        transform: scale(1) translateY(0);
+      }
+    }
+
+    @keyframes shake {
+
+      0%,
+      100% {
+        transform: translateX(0);
+      }
+
+      10%,
+      30%,
+      50%,
+      70%,
+      90% {
+        transform: translateX(-5px);
+      }
+
+      20%,
+      40%,
+      60%,
+      80% {
+        transform: translateX(5px);
+      }
+    }
+
+    .pin-header h2 {
+      color: #3742fa;
+      margin-bottom: 10px;
+      font-size: 1.5em;
+    }
+
+    .pin-header p {
+      color: #666;
+      margin-bottom: 25px;
+      font-size: 1em;
+    }
+
+    .pin-form #pin-input {
+      width: 100%;
+      padding: 15px;
+      border: 2px solid #ddd;
+      border-radius: 10px;
+      font-size: 1.2em;
+      text-align: center;
+      letter-spacing: 3px;
+      margin-bottom: 20px;
+      background: #f8f9fa;
+      transition: all 0.3s ease;
+    }
+
+    .pin-form #pin-input:focus {
+      outline: none;
+      border-color: #3742fa;
+      background: white;
+      box-shadow: 0 0 0 3px rgba(55, 66, 250, 0.1);
+    }
+
+    .pin-buttons {
+      display: flex;
+      gap: 10px;
+      justify-content: center;
+    }
+
+    .btn-secondary {
+      background: #666 !important;
+      color: white;
+    }
+
+    .btn-secondary:hover {
+      background: #555 !important;
+    }
+
+    .pin-error {
+      color: #ff4757;
+      font-size: 0.9em;
+      margin-top: 15px;
+      min-height: 20px;
+      font-weight: bold;
+    }
   </style>
 </head>
 
 <body>
-  <div class="container" id="app-container">
-    <!-- Kids will be loaded dynamically -->
+  <!-- Main View -->
+  <div class="main-view" id="main-view">
+    <div class="container" id="app-container">
+      <!-- Kids will be loaded dynamically -->
+    </div>
+
+    <div class="admin-controls">
+      <button class="admin-toggle" onclick="toggleAdminMenu()">⚙️</button>
+      <div class="admin-menu" id="admin-menu">
+        <button class="admin-btn" onclick="showAdminView()">Admin Dashboard</button>
+        <button class="admin-btn switch" onclick="switchLists()">Switch A/B Lists</button>
+        <button class="admin-btn" onclick="refreshData()">Refresh</button>
+      </div>
+    </div>
   </div>
 
-  <div class="admin-controls">
-    <button class="admin-toggle" onclick="toggleAdminMenu()">⚙️</button>
-    <div class="admin-menu" id="admin-menu">
-      <button class="admin-btn switch" onclick="switchLists()">Switch A/B Lists</button>
-      <button class="admin-btn" onclick="refreshData()">Refresh</button>
+  <!-- PIN Authentication Overlay -->
+  <div class="pin-overlay" id="pin-overlay">
+    <div class="pin-modal">
+      <div class="pin-header">
+        <h2>🔒 Admin Access</h2>
+        <p>Enter PIN to access admin dashboard</p>
+      </div>
+      <div class="pin-form">
+        <input type="password" id="pin-input" placeholder="Enter PIN" maxlength="6" autocomplete="off">
+        <div class="pin-buttons">
+          <button class="btn" onclick="validatePin()">Enter</button>
+          <button class="btn btn-secondary" onclick="hidePinOverlay()">Cancel</button>
+        </div>
+        <div class="pin-error" id="pin-error"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Admin View -->
+  <div class="admin-view" id="admin-view">
+    <div class="admin-header">
+      <h1>Admin Dashboard</h1>
+      <button class="btn" onclick="showMainView()">← Back to Tracker</button>
+    </div>
+
+    <div class="admin-nav">
+      <button class="admin-nav-btn active" onclick="showAdminSection('history')">History</button>
+      <button class="admin-nav-btn" onclick="showAdminSection('points')">Points</button>
+      <button class="admin-nav-btn" onclick="showAdminSection('chores')">Chores</button>
+      <button class="admin-nav-btn" onclick="showAdminSection('tasks')">Extra Tasks</button>
+    </div>
+
+    <!-- History Section -->
+    <div class="admin-section active" id="admin-history">
+      <h2>Task Completion History</h2>
+      <div class="form-group">
+        <label>Filter by Kid:</label>
+        <select id="history-kid-filter">
+          <option value="">All Kids</option>
+        </select>
+      </div>
+      <div id="history-list">
+        <!-- History items will be loaded here -->
+      </div>
+    </div>
+
+    <!-- Points Management Section -->
+    <div class="admin-section" id="admin-points">
+      <h2>Points Management</h2>
+      <div class="form-group">
+        <label>Kid:</label>
+        <select id="points-kid-select">
+          <!-- Kids will be loaded here -->
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Points to Add/Remove:</label>
+        <input type="number" id="points-amount" placeholder="Enter points (use negative to remove)">
+      </div>
+      <button class="btn" onclick="awardPoints()">Update Points</button>
+      <div id="current-points">
+        <!-- Current points will be shown here -->
+      </div>
+    </div>
+
+    <!-- Chores Management Section -->
+    <div class="admin-section" id="admin-chores">
+      <h2>Chores Management</h2>
+      <div class="form-group">
+        <label>List (A or B):</label>
+        <select id="chore-list-select">
+          <option value="A">List A</option>
+          <option value="B">List B</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Chore Name:</label>
+        <input type="text" id="chore-name" placeholder="Enter chore name">
+      </div>
+      <button class="btn" onclick="addChore()">Add Chore</button>
+
+      <h3>Existing Chores</h3>
+      <div id="chores-list">
+        <!-- Chores will be loaded here -->
+      </div>
+    </div>
+
+    <!-- Extra Tasks Management Section -->
+    <div class="admin-section" id="admin-tasks">
+      <h2>Extra Tasks Management</h2>
+      <div class="form-group">
+        <label>Kid:</label>
+        <select id="task-kid-select">
+          <!-- Kids will be loaded here -->
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Task Name:</label>
+        <input type="text" id="task-name" placeholder="Enter task name">
+      </div>
+      <button class="btn" onclick="addExtraTask()">Add Extra Task</button>
+
+      <h3>Existing Extra Tasks</h3>
+      <div id="tasks-list">
+        <!-- Tasks will be loaded here -->
+      </div>
     </div>
   </div>
 
@@ -431,6 +925,10 @@
     const today = new Date().toISOString().split('T')[0];
     let updateInProgress = false;
     let updateQueued = false;
+
+    // PIN Authentication state
+    let isAdminAuthenticated = false;
+    let adminPin = null; // Will be fetched from database
 
     // API helper functions
     async function apiCall(method, url, data = null) {
@@ -450,6 +948,80 @@
       if (response.status === 204) return null;
       return await response.json();
     }
+
+    // PIN Authentication functions
+    async function fetchAdminPin() {
+      try {
+        const response = await apiCall('GET', '/api/admin/pin');
+        adminPin = response.pin;
+      } catch (error) {
+        console.error('Failed to fetch admin PIN:', error);
+        adminPin = '1234'; // Fallback to default
+      }
+    }
+
+    function showPinOverlay() {
+      document.getElementById('pin-overlay').classList.add('active');
+      document.getElementById('pin-input').focus();
+      document.getElementById('pin-error').textContent = '';
+      // Clear any previous PIN input
+      document.getElementById('pin-input').value = '';
+      // Fetch admin PIN if not already loaded
+      if (adminPin === null) {
+        fetchAdminPin();
+      }
+    }
+
+    function hidePinOverlay() {
+      document.getElementById('pin-overlay').classList.remove('active');
+      document.getElementById('pin-input').value = '';
+      document.getElementById('pin-error').textContent = '';
+    }
+
+    async function validatePin() {
+      const enteredPin = document.getElementById('pin-input').value.trim();
+      const errorElement = document.getElementById('pin-error');
+
+      if (!enteredPin) {
+        errorElement.textContent = 'Please enter a PIN';
+        return;
+      }
+
+      // Ensure we have the admin PIN from database
+      if (adminPin === null) {
+        await fetchAdminPin();
+      }
+
+      if (enteredPin === adminPin) {
+        isAdminAuthenticated = true;
+        hidePinOverlay();
+        // Show admin view after successful authentication
+        document.getElementById('main-view').style.display = 'none';
+        document.getElementById('admin-view').classList.add('active');
+        loadAdminData();
+      } else {
+        errorElement.textContent = 'Incorrect PIN. Please try again.';
+        document.getElementById('pin-input').value = '';
+        // Shake animation for incorrect PIN
+        const modal = document.querySelector('.pin-modal');
+        modal.style.animation = 'shake 0.5s ease-in-out';
+        setTimeout(() => {
+          modal.style.animation = 'pinModalFadeIn 0.3s ease-out';
+        }, 500);
+      }
+    }
+
+    // Add keyboard support for PIN entry
+    document.addEventListener('DOMContentLoaded', function () {
+      const pinInput = document.getElementById('pin-input');
+      if (pinInput) {
+        pinInput.addEventListener('keypress', function (e) {
+          if (e.key === 'Enter') {
+            validatePin();
+          }
+        });
+      }
+    });
 
     // Load data from database
     async function loadDataFromDatabase() {
@@ -526,6 +1098,16 @@
 
     // Switch A/B lists (admin function)
     async function switchLists() {
+      // Check if admin is authenticated
+      if (!isAdminAuthenticated) {
+        // Ensure PIN is loaded before showing overlay
+        if (adminPin === null) {
+          await fetchAdminPin();
+        }
+        showPinOverlay();
+        return;
+      }
+
       if (confirm('Switch all kids to opposite chore lists? This is typically done weekly.')) {
         try {
           const result = await apiCall('POST', '/api/admin/switch-lists');
@@ -674,9 +1256,553 @@
       }
     }
 
+    // View switching functions
+    function showAdminView() {
+      // Check if admin is already authenticated
+      if (isAdminAuthenticated) {
+        document.getElementById('main-view').style.display = 'none';
+        document.getElementById('admin-view').classList.add('active');
+        loadAdminData();
+      } else {
+        // Show PIN overlay for authentication
+        showPinOverlay();
+      }
+    }
+
+    function showMainView() {
+      document.getElementById('main-view').style.display = 'block';
+      document.getElementById('admin-view').classList.remove('active');
+      // Clear authentication when leaving admin view for security
+      isAdminAuthenticated = false;
+    }
+
+    function showAdminSection(sectionName) {
+      // Hide all sections
+      document.querySelectorAll('.admin-section').forEach(section => {
+        section.classList.remove('active');
+      });
+
+      // Hide all nav buttons
+      document.querySelectorAll('.admin-nav-btn').forEach(btn => {
+        btn.classList.remove('active');
+      });
+
+      // Show selected section
+      document.getElementById(`admin-${sectionName}`).classList.add('active');
+      event.target.classList.add('active');
+
+      // Load data for the section
+      if (sectionName === 'history') loadHistory();
+      else if (sectionName === 'points') loadPointsData();
+      else if (sectionName === 'chores') loadChoresData();
+      else if (sectionName === 'tasks') loadTasksData();
+    }
+
+    // Load admin data
+    async function loadAdminData() {
+      await Promise.all([
+        loadHistory(),
+        loadPointsData(),
+        loadChoresData(),
+        loadTasksData()
+      ]);
+    }
+
+    // History functions
+    async function loadHistory() {
+      try {
+        const historyList = document.getElementById('history-list');
+
+        // Show loading indicator
+        historyList.innerHTML = '<div style="text-align: center; padding: 20px;">Loading history...</div>';
+
+        const history = await apiCall('GET', '/api/admin/history');
+
+        // Populate kid filter
+        const kidFilter = document.getElementById('history-kid-filter');
+        const currentValue = kidFilter.value; // Preserve selection
+        kidFilter.innerHTML = '<option value="">All Kids</option>';
+        kids.forEach(kid => {
+          kidFilter.innerHTML += `<option value="${kid.id}" ${kid.id == currentValue ? 'selected' : ''}>${kid.name}</option>`;
+        });
+
+        // Add filter event listener (only once)
+        kidFilter.onchange = () => loadHistory();
+
+        // Filter history if a kid is selected
+        const selectedKidId = kidFilter.value;
+        const filteredHistory = selectedKidId ?
+          history.filter(item => item.kid_id === parseInt(selectedKidId)) : history;
+
+        // Group completions by date
+        const dateGroups = await groupHistoryByDate(filteredHistory);
+
+        historyList.innerHTML = '';
+
+        // Sort dates in descending order (newest first)
+        const sortedDates = Object.keys(dateGroups).sort((a, b) => new Date(b) - new Date(a));
+
+        if (sortedDates.length === 0) {
+          historyList.innerHTML = '<div style="text-align: center; padding: 20px;">No history data available.</div>';
+          return;
+        }
+
+        for (const date of sortedDates) {
+          const dateData = dateGroups[date];
+          const historyDateDiv = document.createElement('div');
+          historyDateDiv.className = 'history-date';
+
+          historyDateDiv.innerHTML = `
+            <div class="history-date-header" onclick="toggleHistoryDate('${date}')">
+              <div class="history-date-title">${formatDate(date)}</div>
+              <div class="history-status">
+                <div class="status-item">
+                  <div class="status-icon ${dateData.choresCompleted ? 'status-complete' : 'status-incomplete'}">
+                    ${dateData.choresCompleted ? '✓' : '○'}
+                  </div>
+                  <span>Chores</span>
+                </div>
+                <div class="status-item">
+                  <div class="status-icon ${dateData.extraTasksCompleted ? 'status-complete' : 'status-incomplete'}">
+                    ${dateData.extraTasksCompleted ? '✓' : '○'}
+                  </div>
+                  <span>Extra Tasks</span>
+                </div>
+                <div class="expand-icon">▼</div>
+              </div>
+            </div>
+            <div class="history-details" id="history-details-${date}">
+              ${await generateDateDetails(date, dateData)}
+            </div>
+          `;
+
+          historyList.appendChild(historyDateDiv);
+        }
+      } catch (error) {
+        console.error('Failed to load history:', error);
+        document.getElementById('history-list').innerHTML = '<div style="text-align: center; padding: 20px; color: red;">Failed to load history. Please try again.</div>';
+      }
+    }
+
+    async function groupHistoryByDate(history) {
+      const groups = {};
+
+      // Get unique dates from history (only show dates with activity)
+      const uniqueDates = [...new Set(history.map(item => item.date))];
+
+      // Add today if not in the list
+      const today = new Date().toISOString().split('T')[0];
+      if (!uniqueDates.includes(today)) {
+        uniqueDates.push(today);
+      }
+
+      // Initialize groups for dates with activity
+      uniqueDates.forEach(date => {
+        groups[date] = {
+          completions: [],
+          kidsData: {}
+        };
+      });
+
+      // Group actual completions by date
+      history.forEach(item => {
+        const date = item.date;
+        if (groups[date]) {
+          groups[date].completions.push(item);
+        }
+      });
+
+      // Load progress data for dates with activity (more efficient)
+      for (const date of uniqueDates) {
+        const dateData = groups[date];
+
+        // Load data for each kid on this specific date
+        const kidsPromises = kids.map(async (kid) => {
+          try {
+            const [progress, chores, extraTasks] = await Promise.all([
+              apiCall('GET', `/api/kids/${kid.id}/progress?date=${date}`),
+              apiCall('GET', `/api/kids/${kid.id}/chores?date=${date}`),
+              apiCall('GET', `/api/kids/${kid.id}/extra-tasks?date=${date}`)
+            ]);
+
+            return {
+              kidId: kid.id,
+              kid: kid,
+              progress: progress,
+              chores: chores,
+              extraTasks: extraTasks
+            };
+          } catch (error) {
+            console.error(`Error loading data for ${kid.name} on ${date}:`, error);
+            return null;
+          }
+        });
+
+        const kidsData = await Promise.all(kidsPromises);
+
+        kidsData.forEach(data => {
+          if (data) {
+            dateData.kidsData[data.kidId] = data;
+          }
+        });
+
+        // Determine overall completion status
+        const kidsWithData = Object.values(dateData.kidsData);
+        dateData.choresCompleted = kidsWithData.length > 0 &&
+          kidsWithData.every(data => data.progress.chores_completed);
+        dateData.extraTasksCompleted = kidsWithData.length > 0 &&
+          kidsWithData.every(data => data.progress.extra_tasks_completed);
+      }
+
+      return groups;
+    }
+
+    async function generateDateDetails(date, dateData) {
+      let html = '';
+
+      for (const kidId in dateData.kidsData) {
+        const data = dateData.kidsData[kidId];
+        const kid = data.kid;
+
+        const choresList = data.chores && data.chores.length > 0 ?
+          data.chores.map(chore => `
+            <div class="task-detail ${chore.completed ? 'completed' : 'incomplete'}">
+              <span>${chore.chore_name}</span>
+              <span>${chore.completed ? '✓ Done' : '○ Pending'}</span>
+            </div>
+          `).join('') :
+          '<div class="task-detail incomplete"><span>No chores assigned</span></div>';
+
+        const tasksList = data.extraTasks && data.extraTasks.length > 0 ?
+          data.extraTasks.map(task => `
+            <div class="task-detail ${task.completed ? 'completed' : 'incomplete'}">
+              <span>${task.task_name}</span>
+              <span>${task.completed ? '✓ Done' : '○ Pending'}</span>
+            </div>
+          `).join('') :
+          '<div class="task-detail incomplete"><span>No extra tasks assigned</span></div>';
+
+        html += `
+          <div class="kid-section">
+            <h4>${kid.name}</h4>
+            <div>
+              <strong>Daily Chores:</strong>
+              ${choresList}
+            </div>
+            <div>
+              <strong>Extra Tasks:</strong>
+              ${tasksList}
+            </div>
+          </div>
+        `;
+      }
+
+      return html || '<div class="task-detail incomplete"><span>No data available for this date</span></div>';
+    }
+
+    function formatDate(dateStr) {
+      const date = new Date(dateStr);
+      const today = new Date();
+      const yesterday = new Date(today);
+      yesterday.setDate(yesterday.getDate() - 1);
+
+      if (dateStr === today.toISOString().split('T')[0]) {
+        return 'Today';
+      } else if (dateStr === yesterday.toISOString().split('T')[0]) {
+        return 'Yesterday';
+      } else {
+        return date.toLocaleDateString('en-US', {
+          weekday: 'long',
+          month: 'short',
+          day: 'numeric'
+        });
+      }
+    }
+
+    function toggleHistoryDate(date) {
+      const header = event.currentTarget;
+      const details = document.getElementById(`history-details-${date}`);
+      const expandIcon = header.querySelector('.expand-icon');
+
+      const isExpanded = details.classList.contains('expanded');
+
+      if (isExpanded) {
+        details.classList.remove('expanded');
+        header.classList.remove('expanded');
+        expandIcon.classList.remove('expanded');
+      } else {
+        details.classList.add('expanded');
+        header.classList.add('expanded');
+        expandIcon.classList.add('expanded');
+      }
+    }
+
+    // Points management functions
+    async function loadPointsData() {
+      const pointsSelect = document.getElementById('points-kid-select');
+      pointsSelect.innerHTML = '';
+      kids.forEach(kid => {
+        pointsSelect.innerHTML += `<option value="${kid.id}">${kid.name} (${kid.points} points)</option>`;
+      });
+
+      // Add event listener for dropdown change
+      pointsSelect.onchange = updateCurrentPoints;
+      updateCurrentPoints();
+    }
+
+    function updateCurrentPoints() {
+      const kidId = parseInt(document.getElementById('points-kid-select').value);
+      const kid = kids.find(k => k.id === kidId);
+      const currentPointsDiv = document.getElementById('current-points');
+      if (kid) {
+        currentPointsDiv.innerHTML = `<h3>Current Points: ${kid.points}</h3>`;
+      }
+    }
+
+    async function awardPoints() {
+      try {
+        const kidId = parseInt(document.getElementById('points-kid-select').value);
+        const points = parseInt(document.getElementById('points-amount').value);
+
+        if (!kidId || isNaN(points)) {
+          alert('Please select a kid and enter valid points');
+          return;
+        }
+
+        await apiCall('POST', '/api/admin/award-points', { kidId, points });
+        await loadDataFromDatabase();
+        loadPointsData();
+        document.getElementById('points-amount').value = '';
+        alert(`${points} points ${points > 0 ? 'awarded' : 'removed'} successfully!`);
+      } catch (error) {
+        console.error('Failed to award points:', error);
+        alert('Failed to update points');
+      }
+    }
+
+    // Chores management functions
+    async function loadChoresData() {
+      try {
+        const chores = await apiCall('GET', '/api/admin/chores');
+        const choresList = document.getElementById('chores-list');
+        choresList.innerHTML = '';
+
+        chores.forEach(chore => {
+          const choreItem = document.createElement('div');
+          choreItem.className = `chore-item ${chore.active ? '' : 'inactive'}`;
+          choreItem.innerHTML = `
+            <div class="item-content">
+              <strong>List ${chore.list_name}:</strong> 
+              <input type="text" class="editable-name" value="${chore.chore_name}" 
+                     onblur="updateChoreName(${chore.id}, this.value, '${chore.chore_name}')"
+                     onkeypress="if(event.key==='Enter') this.blur()"
+                     ${!chore.active ? 'disabled' : ''}
+              />
+              ${!chore.active ? ' (Inactive)' : ''}
+            </div>
+            <div class="item-actions">
+              ${chore.active ?
+              `<button class="btn btn-small btn-danger" onclick="deactivateChore(${chore.id})">Deactivate</button>` :
+              '<span>Deactivated</span>'
+            }
+            </div>
+          `;
+          choresList.appendChild(choreItem);
+        });
+      } catch (error) {
+        console.error('Failed to load chores:', error);
+      }
+    }
+
+    async function addChore() {
+      try {
+        const listName = document.getElementById('chore-list-select').value;
+        const choreName = document.getElementById('chore-name').value.trim();
+
+        if (!choreName) {
+          alert('Please enter a chore name');
+          return;
+        }
+
+        await apiCall('POST', '/api/admin/chores', {
+          list_name: listName,
+          chore_name: choreName
+        });
+
+        document.getElementById('chore-name').value = '';
+        loadChoresData();
+        alert('Chore added successfully!');
+      } catch (error) {
+        console.error('Failed to add chore:', error);
+        alert('Failed to add chore');
+      }
+    }
+
+    async function updateChoreName(choreId, newName, originalName) {
+      const trimmedName = newName.trim();
+
+      // Don't update if name hasn't changed or is empty
+      if (trimmedName === originalName || trimmedName === '') {
+        // Reset to original value if empty
+        if (trimmedName === '') {
+          event.target.value = originalName;
+        }
+        return;
+      }
+
+      try {
+        await apiCall('PUT', `/api/admin/chores/${choreId}`, {
+          chore_name: trimmedName
+        });
+        loadChoresData();
+        // Show brief success feedback
+        event.target.style.background = '#e8f5e8';
+        setTimeout(() => {
+          if (event.target) event.target.style.background = '';
+        }, 1000);
+      } catch (error) {
+        console.error('Failed to update chore:', error);
+        // Reset to original value on error
+        event.target.value = originalName;
+        event.target.style.background = '#ffebee';
+        setTimeout(() => {
+          if (event.target) event.target.style.background = '';
+        }, 1000);
+        alert('Failed to update chore name');
+      }
+    }
+
+    async function deactivateChore(choreId) {
+      if (confirm('Are you sure you want to deactivate this chore?')) {
+        try {
+          await apiCall('POST', `/api/admin/chores/${choreId}/deactivate`);
+          loadChoresData();
+          alert('Chore deactivated successfully!');
+        } catch (error) {
+          console.error('Failed to deactivate chore:', error);
+          alert('Failed to deactivate chore');
+        }
+      }
+    }
+
+    // Extra tasks management functions
+    async function loadTasksData() {
+      try {
+        const tasks = await apiCall('GET', '/api/admin/extra-tasks');
+        const tasksList = document.getElementById('tasks-list');
+        tasksList.innerHTML = '';
+
+        // Populate kid select
+        const taskKidSelect = document.getElementById('task-kid-select');
+        taskKidSelect.innerHTML = '';
+        kids.forEach(kid => {
+          taskKidSelect.innerHTML += `<option value="${kid.id}">${kid.name}</option>`;
+        });
+
+        tasks.forEach(task => {
+          const kid = kids.find(k => k.id === task.kid_id);
+          const taskItem = document.createElement('div');
+          taskItem.className = `task-item-admin ${task.active ? '' : 'inactive'}`;
+          taskItem.innerHTML = `
+            <div class="item-content">
+              <strong>${kid?.name || 'Unknown'}:</strong> 
+              <input type="text" class="editable-name" value="${task.task_name}" 
+                     onblur="updateExtraTaskName(${task.id}, this.value, '${task.task_name}')"
+                     onkeypress="if(event.key==='Enter') this.blur()"
+                     ${!task.active ? 'disabled' : ''}
+              />
+              ${!task.active ? ' (Inactive)' : ''}
+            </div>
+            <div class="item-actions">
+              ${task.active ?
+              `<button class="btn btn-small btn-danger" onclick="deactivateExtraTask(${task.id})">Deactivate</button>` :
+              '<span>Deactivated</span>'
+            }
+            </div>
+          `;
+          tasksList.appendChild(taskItem);
+        });
+      } catch (error) {
+        console.error('Failed to load extra tasks:', error);
+      }
+    }
+
+    async function addExtraTask() {
+      try {
+        const kidId = parseInt(document.getElementById('task-kid-select').value);
+        const taskName = document.getElementById('task-name').value.trim();
+
+        if (!kidId || !taskName) {
+          alert('Please select a kid and enter a task name');
+          return;
+        }
+
+        await apiCall('POST', '/api/admin/extra-tasks', {
+          kid_id: kidId,
+          task_name: taskName
+        });
+
+        document.getElementById('task-name').value = '';
+        loadTasksData();
+        alert('Extra task added successfully!');
+      } catch (error) {
+        console.error('Failed to add extra task:', error);
+        alert('Failed to add extra task');
+      }
+    }
+
+    async function updateExtraTaskName(taskId, newName, originalName) {
+      const trimmedName = newName.trim();
+
+      // Don't update if name hasn't changed or is empty
+      if (trimmedName === originalName || trimmedName === '') {
+        // Reset to original value if empty
+        if (trimmedName === '') {
+          event.target.value = originalName;
+        }
+        return;
+      }
+
+      try {
+        await apiCall('PUT', `/api/admin/extra-tasks/${taskId}`, {
+          task_name: trimmedName
+        });
+        loadTasksData();
+        // Show brief success feedback
+        event.target.style.background = '#e8f5e8';
+        setTimeout(() => {
+          if (event.target) event.target.style.background = '';
+        }, 1000);
+      } catch (error) {
+        console.error('Failed to update extra task:', error);
+        // Reset to original value on error
+        event.target.value = originalName;
+        event.target.style.background = '#ffebee';
+        setTimeout(() => {
+          if (event.target) event.target.style.background = '';
+        }, 1000);
+        alert('Failed to update extra task name');
+      }
+    }
+
+    async function deactivateExtraTask(taskId) {
+      if (confirm('Are you sure you want to deactivate this extra task?')) {
+        try {
+          await apiCall('POST', `/api/admin/extra-tasks/${taskId}/deactivate`);
+          loadTasksData();
+          alert('Extra task deactivated successfully!');
+        } catch (error) {
+          console.error('Failed to deactivate extra task:', error);
+          alert('Failed to deactivate extra task');
+        }
+      }
+    }
+
     // Initialize app
     async function initApp() {
       await loadDataFromDatabase();
+      // Pre-load admin PIN for faster authentication
+      await fetchAdminPin();
       updateDisplay();
 
       // Auto-refresh every 60 seconds

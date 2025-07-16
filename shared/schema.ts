@@ -55,6 +55,15 @@ export const dailyProgress = pgTable("daily_progress", {
     .default(false),
 });
 
+// Settings table for app configuration (admin PIN, etc.)
+export const settings = pgTable("settings", {
+  id: serial("id").primaryKey(),
+  key: text("key").notNull().unique(),
+  value: text("value").notNull(),
+  created_at: timestamp("created_at").notNull().defaultNow(),
+  updated_at: timestamp("updated_at").notNull().defaultNow(),
+});
+
 // Schema validation
 export const insertKidSchema = createInsertSchema(kids).omit({
   id: true,
@@ -81,6 +90,12 @@ export const insertDailyProgressSchema = createInsertSchema(dailyProgress).omit(
   }
 );
 
+export const insertSettingsSchema = createInsertSchema(settings).omit({
+  id: true,
+  created_at: true,
+  updated_at: true,
+});
+
 // Type exports
 export type Kid = typeof kids.$inferSelect;
 export type InsertKid = z.infer<typeof insertKidSchema>;
@@ -92,3 +107,5 @@ export type TaskCompletion = typeof taskCompletions.$inferSelect;
 export type InsertTaskCompletion = z.infer<typeof insertTaskCompletionSchema>;
 export type DailyProgress = typeof dailyProgress.$inferSelect;
 export type InsertDailyProgress = z.infer<typeof insertDailyProgressSchema>;
+export type Settings = typeof settings.$inferSelect;
+export type InsertSettings = z.infer<typeof insertSettingsSchema>;

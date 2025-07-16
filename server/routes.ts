@@ -8,6 +8,9 @@ function getCurrentDate(): string {
 }
 
 export async function registerRoutes(app: Express): Promise<Server> {
+  // Initialize default settings
+  await storage.initializeDefaultSettings();
+
   // Kids routes
   app.get("/api/kids", async (req, res) => {
     try {
@@ -214,6 +217,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Admin: Update chore name
+  app.put("/api/admin/chores/:id", async (req, res) => {
+    try {
+      const choreId = parseInt(req.params.id);
+      const { chore_name } = req.body;
+
+      if (!chore_name) {
+        return res.status(400).json({ message: "chore_name is required" });
+      }
+
+      const updatedChore = await storage.updateChore(choreId, { chore_name });
+      res.json({ message: "Chore updated", chore: updatedChore });
+    } catch (error) {
+      res.status(500).json({ message: "Failed to update chore" });
+    }
+  });
+
   // Admin: Deactivate chore
   app.post("/api/admin/chores/:id/deactivate", async (req, res) => {
     try {
@@ -242,6 +262,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Admin: Update extra task name
+  app.put("/api/admin/extra-tasks/:id", async (req, res) => {
+    try {
+      const taskId = parseInt(req.params.id);
+      const { task_name } = req.body;
+
+      if (!task_name) {
+        return res.status(400).json({ message: "task_name is required" });
+      }
+
+      const updatedTask = await storage.updateExtraTask(taskId, { task_name });
+      res.json({ message: "Extra task updated", task: updatedTask });
+    } catch (error) {
+      res.status(500).json({ message: "Failed to update extra task" });
+    }
+  });
+
   // Admin: Deactivate extra task
   app.post("/api/admin/extra-tasks/:id/deactivate", async (req, res) => {
     try {
@@ -250,6 +287,67 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json({ message: "Extra task deactivated" });
     } catch (error) {
       res.status(500).json({ message: "Failed to deactivate extra task" });
+    }
+  });
+
+  // Admin: Get task completion history
+  app.get("/api/admin/history", async (req, res) => {
+    try {
+      const { kidId, startDate, endDate } = req.query;
+      const history = await storage.getTaskHistory(
+        kidId ? parseInt(kidId as string) : undefined,
+        startDate as string,
+        endDate as string
+      );
+      res.json(history);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch history" });
+    }
+  });
+
+  // Admin: Get all chores (active and inactive)
+  app.get("/api/admin/chores", async (req, res) => {
+    try {
+      const chores = await storage.getAllChores();
+      res.json(chores);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch chores" });
+    }
+  });
+
+  // Admin: Get all extra tasks (active and inactive)
+  app.get("/api/admin/extra-tasks", async (req, res) => {
+    try {
+      const tasks = await storage.getAllExtraTasks();
+      res.json(tasks);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch extra tasks" });
+    }
+  });
+
+  // Admin PIN management
+  app.get("/api/admin/pin", async (req, res) => {
+    try {
+      const pin = await storage.getSetting("admin_pin");
+      res.json({ pin: pin || "1234" }); // Return default if not set
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch admin PIN" });
+    }
+  });
+
+  app.post("/api/admin/pin", async (req, res) => {
+    try {
+      const { pin } = req.body;
+      if (!pin || pin.length < 3) {
+        return res
+          .status(400)
+          .json({ message: "PIN must be at least 3 characters" });
+      }
+
+      await storage.setSetting("admin_pin", pin);
+      res.json({ message: "PIN updated successfully" });
+    } catch (error) {
+      res.status(500).json({ message: "Failed to update admin PIN" });
     }
   });
 
