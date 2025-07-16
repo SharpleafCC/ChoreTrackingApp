@@ -1,8 +1,11 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-import { insertKidSchema, insertChoreSchema, insertRewardSchema } from "@shared/schema";
 import { z } from "zod";
+
+function getCurrentDate(): string {
+  return new Date().toISOString().split("T")[0]; // YYYY-MM-DD format
+}
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Kids routes
@@ -28,166 +31,225 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/kids", async (req, res) => {
+  // Get kid's current active chores (based on their A or B list assignment)
+  app.get("/api/kids/:id/chores", async (req, res) => {
     try {
-      const validatedData = insertKidSchema.parse(req.body);
-      const kid = await storage.createKid(validatedData);
-      res.status(201).json(kid);
+      const kidId = parseInt(req.params.id);
+      const date = (req.query.date as string) || getCurrentDate();
+
+      const chores = await storage.getKidActiveChores(kidId);
+
+      // Add completion status for each chore
+      const choresWithStatus = await Promise.all(
+        chores.map(async (chore) => ({
+          ...chore,
+          completed: await storage.isTaskCompleted(
+            kidId,
+            "chore",
+            chore.id,
+            date
+          ),
+        }))
+      );
+
+      res.json(choresWithStatus);
     } catch (error) {
-      if (error instanceof z.ZodError) {
-        return res.status(400).json({ message: "Invalid input", errors: error.errors });
+      res.status(500).json({ message: "Failed to fetch kid's chores" });
+    }
+  });
+
+  // Get kid's active extra tasks
+  app.get("/api/kids/:id/extra-tasks", async (req, res) => {
+    try {
+      const kidId = parseInt(req.params.id);
+      const date = (req.query.date as string) || getCurrentDate();
+
+      const extraTasks = await storage.getKidActiveExtraTasks(kidId);
+
+      // Add completion status for each extra task
+      const extraTasksWithStatus = await Promise.all(
+        extraTasks.map(async (task) => ({
+          ...task,
+          completed: await storage.isTaskCompleted(
+            kidId,
+            "extra",
+            task.id,
+            date
+          ),
+        }))
+      );
+
+      res.json(extraTasksWithStatus);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch kid's extra tasks" });
+    }
+  });
+
+  // Get kid's daily progress (computed from individual completions)
+  app.get("/api/kids/:id/progress", async (req, res) => {
+    try {
+      const kidId = parseInt(req.params.id);
+      const date = (req.query.date as string) || getCurrentDate();
+
+      const progress = await storage.computeDailyProgress(kidId, date);
+
+      res.json({
+        kid_id: kidId,
+        date,
+        chores_completed: progress.choresCompleted,
+        extra_tasks_completed: progress.extraTasksCompleted,
+        points_earned_today: progress.pointsEarned,
+      });
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch daily progress" });
+    }
+  });
+
+  // Toggle individual task completion
+  app.post(
+    "/api/kids/:kidId/tasks/:taskType/:taskId/toggle",
+    async (req, res) => {
+      try {
+        const kidId = parseInt(req.params.kidId);
+        const taskType = req.params.taskType as "chore" | "extra";
+        const taskId = parseInt(req.params.taskId);
+        const date = req.body.date || getCurrentDate();
+
+        if (taskType !== "chore" && taskType !== "extra") {
+          return res
+            .status(400)
+            .json({ message: "Task type must be 'chore' or 'extra'" });
+        }
+
+        const isCompleted = await storage.isTaskCompleted(
+          kidId,
+          taskType,
+          taskId,
+          date
+        );
+
+        if (isCompleted) {
+          await storage.unmarkTaskComplete(kidId, taskType, taskId, date);
+        } else {
+          await storage.markTaskComplete(kidId, taskType, taskId, date);
+        }
+
+        // Get updated progress
+        const progress = await storage.computeDailyProgress(kidId, date);
+        const kid = await storage.getKid(kidId);
+
+        res.json({
+          message: `Task ${isCompleted ? "unmarked" : "marked"} as ${
+            isCompleted ? "incomplete" : "complete"
+          }`,
+          progress: {
+            chores_completed: progress.choresCompleted,
+            extra_tasks_completed: progress.extraTasksCompleted,
+            points_earned_today: progress.pointsEarned,
+          },
+          kid_points: kid?.points || 0,
+          allowance_status: progress.choresCompleted
+            ? "$16 weekly allowance on track"
+            : "Complete all chores for allowance",
+          bonus_status: progress.extraTasksCompleted
+            ? "$4 weekly bonus earned"
+            : "Complete all extra tasks for bonus",
+        });
+      } catch (error) {
+        res.status(500).json({ message: "Failed to toggle task completion" });
       }
-      res.status(500).json({ message: "Failed to create kid" });
+    }
+  );
+
+  // Admin: Switch all kids' A/B lists (weekly reset)
+  app.post("/api/admin/switch-lists", async (req, res) => {
+    try {
+      await storage.switchKidLists();
+      const kids = await storage.getAllKids();
+      res.json({
+        message: "All kids switched to opposite chore lists",
+        kids,
+      });
+    } catch (error) {
+      res.status(500).json({ message: "Failed to switch lists" });
     }
   });
 
-  app.patch("/api/kids/:id", async (req, res) => {
+  // Admin: Award points manually
+  app.post("/api/admin/award-points", async (req, res) => {
     try {
-      const id = parseInt(req.params.id);
-      const updates = req.body;
-      const kid = await storage.updateKid(id, updates);
-      if (!kid) {
-        return res.status(404).json({ message: "Kid not found" });
+      const { kidId, points } = req.body;
+      if (!kidId || points === undefined) {
+        return res
+          .status(400)
+          .json({ message: "kidId and points are required" });
       }
-      res.json(kid);
+
+      await storage.awardPoints(kidId, points);
+      const kid = await storage.getKid(kidId);
+
+      res.json({
+        message: `${points} points awarded`,
+        kid,
+      });
     } catch (error) {
-      res.status(500).json({ message: "Failed to update kid" });
+      res.status(500).json({ message: "Failed to award points" });
     }
   });
 
-  app.delete("/api/kids/:id", async (req, res) => {
+  // Admin: Add new chore
+  app.post("/api/admin/chores", async (req, res) => {
     try {
-      const id = parseInt(req.params.id);
-      const deleted = await storage.deleteKid(id);
-      if (!deleted) {
-        return res.status(404).json({ message: "Kid not found" });
+      const { list_name, chore_name } = req.body;
+      if (!list_name || !chore_name) {
+        return res
+          .status(400)
+          .json({ message: "list_name and chore_name are required" });
       }
-      res.status(204).send();
+
+      const chore = await storage.addChore({ list_name, chore_name });
+      res.json({ message: "Chore added", chore });
     } catch (error) {
-      res.status(500).json({ message: "Failed to delete kid" });
+      res.status(500).json({ message: "Failed to add chore" });
     }
   });
 
-  // Chores routes
-  app.get("/api/chores", async (req, res) => {
+  // Admin: Deactivate chore
+  app.post("/api/admin/chores/:id/deactivate", async (req, res) => {
     try {
-      const kidId = req.query.kidId ? parseInt(req.query.kidId as string) : undefined;
-      const chores = kidId ? await storage.getChoresByKid(kidId) : await storage.getAllChores();
-      res.json(chores);
+      const choreId = parseInt(req.params.id);
+      await storage.deactivateChore(choreId);
+      res.json({ message: "Chore deactivated" });
     } catch (error) {
-      res.status(500).json({ message: "Failed to fetch chores" });
+      res.status(500).json({ message: "Failed to deactivate chore" });
     }
   });
 
-  app.post("/api/chores", async (req, res) => {
+  // Admin: Add new extra task
+  app.post("/api/admin/extra-tasks", async (req, res) => {
     try {
-      const validatedData = insertChoreSchema.parse(req.body);
-      const chore = await storage.createChore(validatedData);
-      res.status(201).json(chore);
-    } catch (error) {
-      if (error instanceof z.ZodError) {
-        return res.status(400).json({ message: "Invalid input", errors: error.errors });
+      const { kid_id, task_name } = req.body;
+      if (!kid_id || !task_name) {
+        return res
+          .status(400)
+          .json({ message: "kid_id and task_name are required" });
       }
-      res.status(500).json({ message: "Failed to create chore" });
+
+      const task = await storage.addExtraTask({ kid_id, task_name });
+      res.json({ message: "Extra task added", task });
+    } catch (error) {
+      res.status(500).json({ message: "Failed to add extra task" });
     }
   });
 
-  app.patch("/api/chores/:id", async (req, res) => {
+  // Admin: Deactivate extra task
+  app.post("/api/admin/extra-tasks/:id/deactivate", async (req, res) => {
     try {
-      const id = parseInt(req.params.id);
-      const updates = req.body;
-      const chore = await storage.updateChore(id, updates);
-      if (!chore) {
-        return res.status(404).json({ message: "Chore not found" });
-      }
-      res.json(chore);
+      const taskId = parseInt(req.params.id);
+      await storage.deactivateExtraTask(taskId);
+      res.json({ message: "Extra task deactivated" });
     } catch (error) {
-      res.status(500).json({ message: "Failed to update chore" });
-    }
-  });
-
-  app.delete("/api/chores/:id", async (req, res) => {
-    try {
-      const id = parseInt(req.params.id);
-      const deleted = await storage.deleteChore(id);
-      if (!deleted) {
-        return res.status(404).json({ message: "Chore not found" });
-      }
-      res.status(204).send();
-    } catch (error) {
-      res.status(500).json({ message: "Failed to delete chore" });
-    }
-  });
-
-  // Toggle chore completion
-  app.patch("/api/chores/:id/toggle", async (req, res) => {
-    try {
-      const id = parseInt(req.params.id);
-      const chore = await storage.getChore(id);
-      if (!chore) {
-        return res.status(404).json({ message: "Chore not found" });
-      }
-      
-      const completed = !chore.completed;
-      const updatedChore = await storage.updateChore(id, { completed });
-      
-      // Award or remove stars based on completion
-      if (completed) {
-        await storage.awardStars(chore.kidId, chore.starValue);
-      } else {
-        await storage.awardStars(chore.kidId, -chore.starValue);
-      }
-      
-      res.json(updatedChore);
-    } catch (error) {
-      res.status(500).json({ message: "Failed to toggle chore completion" });
-    }
-  });
-
-  // Achievements routes
-  app.get("/api/achievements", async (req, res) => {
-    try {
-      const kidId = req.query.kidId ? parseInt(req.query.kidId as string) : undefined;
-      if (!kidId) {
-        return res.status(400).json({ message: "kidId is required" });
-      }
-      const achievements = await storage.getAchievementsByKid(kidId);
-      res.json(achievements);
-    } catch (error) {
-      res.status(500).json({ message: "Failed to fetch achievements" });
-    }
-  });
-
-  // Rewards routes
-  app.get("/api/rewards", async (req, res) => {
-    try {
-      const rewards = await storage.getAllRewards();
-      res.json(rewards);
-    } catch (error) {
-      res.status(500).json({ message: "Failed to fetch rewards" });
-    }
-  });
-
-  app.post("/api/rewards", async (req, res) => {
-    try {
-      const validatedData = insertRewardSchema.parse(req.body);
-      const reward = await storage.createReward(validatedData);
-      res.status(201).json(reward);
-    } catch (error) {
-      if (error instanceof z.ZodError) {
-        return res.status(400).json({ message: "Invalid input", errors: error.errors });
-      }
-      res.status(500).json({ message: "Failed to create reward" });
-    }
-  });
-
-  // Special operations
-  app.post("/api/reset-weekly", async (req, res) => {
-    try {
-      await storage.resetWeeklyChores();
-      res.json({ message: "Weekly chores reset successfully" });
-    } catch (error) {
-      res.status(500).json({ message: "Failed to reset weekly chores" });
+      res.status(500).json({ message: "Failed to deactivate extra task" });
     }
   });
 

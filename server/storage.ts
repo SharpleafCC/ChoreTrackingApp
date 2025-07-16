@@ -1,177 +1,308 @@
-import { kids, chores, achievements, rewards, type Kid, type InsertKid, type Chore, type InsertChore, type Achievement, type InsertAchievement, type Reward, type InsertReward } from "@shared/schema";
+import {
+  kids,
+  choreLists,
+  extraTasks,
+  taskCompletions,
+  dailyProgress,
+  type Kid,
+  type InsertKid,
+  type ChoreList,
+  type InsertChoreList,
+  type ExtraTask,
+  type InsertExtraTask,
+  type TaskCompletion,
+  type InsertTaskCompletion,
+  type DailyProgress,
+  type InsertDailyProgress,
+} from "@shared/schema";
 import { db } from "./db";
-import { eq } from "drizzle-orm";
+import { eq, and, asc } from "drizzle-orm";
 
 export interface IStorage {
   // Kids
   getAllKids(): Promise<Kid[]>;
   getKid(id: number): Promise<Kid | undefined>;
-  createKid(kid: InsertKid): Promise<Kid>;
   updateKid(id: number, updates: Partial<Kid>): Promise<Kid | undefined>;
-  deleteKid(id: number): Promise<boolean>;
+  switchKidLists(): Promise<void>; // Switch A/B lists for all kids
+  awardPoints(kidId: number, points: number): Promise<void>;
 
-  // Chores
-  getAllChores(): Promise<Chore[]>;
-  getChoresByKid(kidId: number): Promise<Chore[]>;
-  getChore(id: number): Promise<Chore | undefined>;
-  createChore(chore: InsertChore): Promise<Chore>;
-  updateChore(id: number, updates: Partial<Chore>): Promise<Chore | undefined>;
-  deleteChore(id: number): Promise<boolean>;
+  // Chore Lists (with active state management)
+  getActiveChoreList(listName: string): Promise<ChoreList[]>; // Get active chores for A or B list
+  getKidActiveChores(kidId: number): Promise<ChoreList[]>; // Get active chores for kid's current list
+  deactivateChore(choreId: number): Promise<void>; // Deactivate instead of delete
+  addChore(chore: InsertChoreList): Promise<ChoreList>; // Add new chore
 
-  // Achievements
-  getAchievementsByKid(kidId: number): Promise<Achievement[]>;
-  createAchievement(achievement: InsertAchievement): Promise<Achievement>;
-  updateAchievement(id: number, updates: Partial<Achievement>): Promise<Achievement | undefined>;
+  // Extra Tasks (per-kid with active state)
+  getKidActiveExtraTasks(kidId: number): Promise<ExtraTask[]>; // Get active extra tasks for specific kid
+  deactivateExtraTask(taskId: number): Promise<void>; // Deactivate instead of delete
+  addExtraTask(task: InsertExtraTask): Promise<ExtraTask>; // Add new extra task
 
-  // Rewards
-  getAllRewards(): Promise<Reward[]>;
-  createReward(reward: InsertReward): Promise<Reward>;
-  updateReward(id: number, updates: Partial<Reward>): Promise<Reward | undefined>;
-  deleteReward(id: number): Promise<boolean>;
+  // Individual Task Completions
+  markTaskComplete(
+    kidId: number,
+    taskType: "chore" | "extra",
+    taskId: number,
+    date: string
+  ): Promise<TaskCompletion>;
+  unmarkTaskComplete(
+    kidId: number,
+    taskType: "chore" | "extra",
+    taskId: number,
+    date: string
+  ): Promise<void>;
+  getTaskCompletions(kidId: number, date: string): Promise<TaskCompletion[]>;
+  isTaskCompleted(
+    kidId: number,
+    taskType: "chore" | "extra",
+    taskId: number,
+    date: string
+  ): Promise<boolean>;
 
-  // Special operations
-  resetWeeklyChores(): Promise<void>;
-  awardStars(kidId: number, stars: number): Promise<void>;
+  // Daily Progress (computed from individual completions)
+  computeDailyProgress(
+    kidId: number,
+    date: string
+  ): Promise<{
+    choresCompleted: boolean;
+    extraTasksCompleted: boolean;
+    pointsEarned: number;
+  }>;
 }
 
-export class DatabaseStorage implements IStorage {
+class DatabaseStorage implements IStorage {
   // Kids
   async getAllKids(): Promise<Kid[]> {
-    return await db.select().from(kids);
+    return await db.select().from(kids).orderBy(asc(kids.id));
   }
 
   async getKid(id: number): Promise<Kid | undefined> {
-    const [kid] = await db.select().from(kids).where(eq(kids.id, id));
-    return kid || undefined;
-  }
-
-  async createKid(kid: InsertKid): Promise<Kid> {
-    const [newKid] = await db
-      .insert(kids)
-      .values(kid)
-      .returning();
-    return newKid;
+    const result = await db.select().from(kids).where(eq(kids.id, id));
+    return result[0];
   }
 
   async updateKid(id: number, updates: Partial<Kid>): Promise<Kid | undefined> {
-    const [updatedKid] = await db
+    const result = await db
       .update(kids)
       .set(updates)
       .where(eq(kids.id, id))
       .returning();
-    return updatedKid || undefined;
+    return result[0];
   }
 
-  async deleteKid(id: number): Promise<boolean> {
-    // Delete associated chores and achievements first
-    await db.delete(chores).where(eq(chores.kidId, id));
-    await db.delete(achievements).where(eq(achievements.kidId, id));
-    
-    const result = await db.delete(kids).where(eq(kids.id, id));
-    return (result.rowCount ?? 0) > 0;
+  async switchKidLists(): Promise<void> {
+    // Switch all kids from A to B or B to A
+    const allKids = await this.getAllKids();
+    for (const kid of allKids) {
+      const newList = kid.current_list === "A" ? "B" : "A";
+      await this.updateKid(kid.id, { current_list: newList });
+    }
   }
 
-  // Chores
-  async getAllChores(): Promise<Chore[]> {
-    return await db.select().from(chores);
-  }
-
-  async getChoresByKid(kidId: number): Promise<Chore[]> {
-    return await db.select().from(chores).where(eq(chores.kidId, kidId));
-  }
-
-  async getChore(id: number): Promise<Chore | undefined> {
-    const [chore] = await db.select().from(chores).where(eq(chores.id, id));
-    return chore || undefined;
-  }
-
-  async createChore(chore: InsertChore): Promise<Chore> {
-    const [newChore] = await db
-      .insert(chores)
-      .values(chore)
-      .returning();
-    return newChore;
-  }
-
-  async updateChore(id: number, updates: Partial<Chore>): Promise<Chore | undefined> {
-    const [updatedChore] = await db
-      .update(chores)
-      .set(updates)
-      .where(eq(chores.id, id))
-      .returning();
-    return updatedChore || undefined;
-  }
-
-  async deleteChore(id: number): Promise<boolean> {
-    const result = await db.delete(chores).where(eq(chores.id, id));
-    return (result.rowCount ?? 0) > 0;
-  }
-
-  // Achievements
-  async getAchievementsByKid(kidId: number): Promise<Achievement[]> {
-    return await db.select().from(achievements).where(eq(achievements.kidId, kidId));
-  }
-
-  async createAchievement(achievement: InsertAchievement): Promise<Achievement> {
-    const [newAchievement] = await db
-      .insert(achievements)
-      .values(achievement)
-      .returning();
-    return newAchievement;
-  }
-
-  async updateAchievement(id: number, updates: Partial<Achievement>): Promise<Achievement | undefined> {
-    const [updatedAchievement] = await db
-      .update(achievements)
-      .set(updates)
-      .where(eq(achievements.id, id))
-      .returning();
-    return updatedAchievement || undefined;
-  }
-
-  // Rewards
-  async getAllRewards(): Promise<Reward[]> {
-    return await db.select().from(rewards);
-  }
-
-  async createReward(reward: InsertReward): Promise<Reward> {
-    const [newReward] = await db
-      .insert(rewards)
-      .values(reward)
-      .returning();
-    return newReward;
-  }
-
-  async updateReward(id: number, updates: Partial<Reward>): Promise<Reward | undefined> {
-    const [updatedReward] = await db
-      .update(rewards)
-      .set(updates)
-      .where(eq(rewards.id, id))
-      .returning();
-    return updatedReward || undefined;
-  }
-
-  async deleteReward(id: number): Promise<boolean> {
-    const result = await db.delete(rewards).where(eq(rewards.id, id));
-    return (result.rowCount ?? 0) > 0;
-  }
-
-  // Special operations
-  async resetWeeklyChores(): Promise<void> {
-    await db
-      .update(chores)
-      .set({ completed: false })
-      .where(eq(chores.type, "weekly"));
-  }
-
-  async awardStars(kidId: number, stars: number): Promise<void> {
+  async awardPoints(kidId: number, points: number): Promise<void> {
     const kid = await this.getKid(kidId);
     if (kid) {
       await db
         .update(kids)
-        .set({ stars: kid.stars + stars })
+        .set({ points: kid.points + points })
         .where(eq(kids.id, kidId));
     }
+  }
+
+  // Chore Lists
+  async getActiveChoreList(listName: string): Promise<ChoreList[]> {
+    return await db
+      .select()
+      .from(choreLists)
+      .where(
+        and(eq(choreLists.list_name, listName), eq(choreLists.active, true))
+      );
+  }
+
+  async getKidActiveChores(kidId: number): Promise<ChoreList[]> {
+    const kid = await this.getKid(kidId);
+    if (!kid) return [];
+    return await this.getActiveChoreList(kid.current_list);
+  }
+
+  async deactivateChore(choreId: number): Promise<void> {
+    await db
+      .update(choreLists)
+      .set({ active: false })
+      .where(eq(choreLists.id, choreId));
+  }
+
+  async addChore(chore: InsertChoreList): Promise<ChoreList> {
+    const result = await db.insert(choreLists).values(chore).returning();
+    return result[0];
+  }
+
+  // Extra Tasks
+  async getKidActiveExtraTasks(kidId: number): Promise<ExtraTask[]> {
+    return await db
+      .select()
+      .from(extraTasks)
+      .where(and(eq(extraTasks.kid_id, kidId), eq(extraTasks.active, true)));
+  }
+
+  async deactivateExtraTask(taskId: number): Promise<void> {
+    await db
+      .update(extraTasks)
+      .set({ active: false })
+      .where(eq(extraTasks.id, taskId));
+  }
+
+  async addExtraTask(task: InsertExtraTask): Promise<ExtraTask> {
+    const result = await db.insert(extraTasks).values(task).returning();
+    return result[0];
+  }
+
+  // Individual Task Completions
+  async markTaskComplete(
+    kidId: number,
+    taskType: "chore" | "extra",
+    taskId: number,
+    date: string
+  ): Promise<TaskCompletion> {
+    // First check if already completed
+    const existing = await db
+      .select()
+      .from(taskCompletions)
+      .where(
+        and(
+          eq(taskCompletions.kid_id, kidId),
+          eq(taskCompletions.task_type, taskType),
+          eq(taskCompletions.task_id, taskId),
+          eq(taskCompletions.date, date)
+        )
+      );
+
+    if (existing.length > 0) {
+      return existing[0];
+    }
+
+    // Check completion status BEFORE adding the new completion
+    let wasAllExtraTasksCompleted = false;
+    if (taskType === "extra") {
+      const beforeProgress = await this.computeDailyProgress(kidId, date);
+      wasAllExtraTasksCompleted = beforeProgress.extraTasksCompleted;
+    }
+
+    const result = await db
+      .insert(taskCompletions)
+      .values({ kid_id: kidId, task_type: taskType, task_id: taskId, date })
+      .returning();
+
+    // Award points if this completion changes the status from incomplete to complete
+    if (taskType === "extra") {
+      const afterProgress = await this.computeDailyProgress(kidId, date);
+      if (!wasAllExtraTasksCompleted && afterProgress.extraTasksCompleted) {
+        await this.awardPoints(kidId, 1);
+      }
+    }
+
+    return result[0];
+  }
+
+  async unmarkTaskComplete(
+    kidId: number,
+    taskType: "chore" | "extra",
+    taskId: number,
+    date: string
+  ): Promise<void> {
+    // Check completion status BEFORE removing the completion
+    let wasAllExtraTasksCompleted = false;
+    if (taskType === "extra") {
+      const beforeProgress = await this.computeDailyProgress(kidId, date);
+      wasAllExtraTasksCompleted = beforeProgress.extraTasksCompleted;
+    }
+
+    await db
+      .delete(taskCompletions)
+      .where(
+        and(
+          eq(taskCompletions.kid_id, kidId),
+          eq(taskCompletions.task_type, taskType),
+          eq(taskCompletions.task_id, taskId),
+          eq(taskCompletions.date, date)
+        )
+      );
+
+    // Remove points if this uncompletion changes the status from complete to incomplete
+    if (taskType === "extra") {
+      const afterProgress = await this.computeDailyProgress(kidId, date);
+      if (wasAllExtraTasksCompleted && !afterProgress.extraTasksCompleted) {
+        await this.awardPoints(kidId, -1); // Remove 1 point
+      }
+    }
+  }
+
+  async getTaskCompletions(
+    kidId: number,
+    date: string
+  ): Promise<TaskCompletion[]> {
+    return await db
+      .select()
+      .from(taskCompletions)
+      .where(
+        and(eq(taskCompletions.kid_id, kidId), eq(taskCompletions.date, date))
+      );
+  }
+
+  async isTaskCompleted(
+    kidId: number,
+    taskType: "chore" | "extra",
+    taskId: number,
+    date: string
+  ): Promise<boolean> {
+    const result = await db
+      .select()
+      .from(taskCompletions)
+      .where(
+        and(
+          eq(taskCompletions.kid_id, kidId),
+          eq(taskCompletions.task_type, taskType),
+          eq(taskCompletions.task_id, taskId),
+          eq(taskCompletions.date, date)
+        )
+      );
+    return result.length > 0;
+  }
+
+  // Daily Progress (computed from individual completions)
+  async computeDailyProgress(
+    kidId: number,
+    date: string
+  ): Promise<{
+    choresCompleted: boolean;
+    extraTasksCompleted: boolean;
+    pointsEarned: number;
+  }> {
+    // Get all active tasks for the kid
+    const activeChores = await this.getKidActiveChores(kidId);
+    const activeExtraTasks = await this.getKidActiveExtraTasks(kidId);
+
+    // Get completions for the day
+    const completions = await this.getTaskCompletions(kidId, date);
+    const choreCompletions = completions.filter((c) => c.task_type === "chore");
+    const extraCompletions = completions.filter((c) => c.task_type === "extra");
+
+    // Check if all tasks are completed
+    const choresCompleted =
+      activeChores.length > 0 &&
+      activeChores.every((chore) =>
+        choreCompletions.some((c) => c.task_id === chore.id)
+      );
+
+    const extraTasksCompleted =
+      activeExtraTasks.length > 0 &&
+      activeExtraTasks.every((task) =>
+        extraCompletions.some((c) => c.task_id === task.id)
+      );
+
+    // Points earned today (1 point if all extra tasks completed)
+    const pointsEarned = extraTasksCompleted ? 1 : 0;
+
+    return { choresCompleted, extraTasksCompleted, pointsEarned };
   }
 }
 

@@ -1,639 +1,582 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-    <title>Avery & Adyson's Chore Tracker</title>
-    <style>
-      * {
-        margin: 0;
-        padding: 0;
-        box-sizing: border-box;
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>Kid's Chore Tracker - Individual Tasks</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Arial', sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      overflow: auto;
+      touch-action: manipulation;
+    }
+
+    .container {
+      display: flex;
+      min-height: 100vh;
+      width: 100vw;
+    }
+
+    .child-section {
+      flex: 1;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+    }
+
+    .child-section:first-child {
+      background: linear-gradient(135deg, #ff9a9e 0%, #fecfef 100%);
+      border-right: 4px solid #fff;
+    }
+
+    .child-section:last-child {
+      background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);
+    }
+
+    .child-header {
+      text-align: center;
+      color: #333;
+      font-size: 2.5em;
+      font-weight: bold;
+      text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+      margin-bottom: 5px;
+    }
+
+    .list-indicator {
+      text-align: center;
+      font-size: 1.4em;
+      font-weight: bold;
+      color: #555;
+      background: rgba(255, 255, 255, 0.8);
+      padding: 8px 15px;
+      border-radius: 20px;
+      margin-bottom: 15px;
+      display: inline-block;
+      width: 100%;
+    }
+
+    .stats {
+      display: flex;
+      justify-content: space-around;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+    }
+
+    .stat-item {
+      background: rgba(255, 255, 255, 0.9);
+      padding: 10px 15px;
+      border-radius: 15px;
+      text-align: center;
+      min-width: 100px;
+      margin: 5px;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    }
+
+    .stat-value {
+      font-size: 1.3em;
+      font-weight: bold;
+      color: #333;
+    }
+
+    .stat-label {
+      font-size: 0.8em;
+      color: #666;
+    }
+
+    .tasks-container {
+      flex: 1;
+      overflow-y: auto;
+      padding: 15px;
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 20px;
+      margin-bottom: 15px;
+      max-height: 60vh;
+    }
+
+    .task-group {
+      margin-bottom: 20px;
+    }
+
+    .task-group-title {
+      font-size: 1.3em;
+      font-weight: bold;
+      color: #333;
+      margin-bottom: 10px;
+      text-align: center;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    .task-list {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 12px;
+      padding: 15px;
+    }
+
+    .task-item {
+      background: rgba(255, 255, 255, 0.95);
+      border: 2px solid rgba(255, 255, 255, 0.3);
+      border-radius: 12px;
+      padding: 16px;
+      font-size: 1em;
+      color: #333;
+      cursor: pointer;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      min-height: 60px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .task-item:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+      border-color: rgba(255, 255, 255, 0.6);
+    }
+
+    .task-item.loading {
+      pointer-events: none;
+      animation: pulse 1.5s infinite;
+    }
+
+    .task-item.loading::after {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.6), transparent);
+      animation: shimmer 1.2s infinite;
+    }
+
+    @keyframes pulse {
+
+      0%,
+      100% {
+        opacity: 1;
       }
 
-      body {
-        font-family: 'Arial', sans-serif;
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        min-height: 100vh;
-        overflow: auto;
-        touch-action: manipulation;
+      50% {
+        opacity: 0.7;
+      }
+    }
+
+    @keyframes shimmer {
+      0% {
+        left: -100%;
       }
 
+      100% {
+        left: 100%;
+      }
+    }
+
+    @keyframes bounce {
+
+      0%,
+      100% {
+        transform: scale(1);
+      }
+
+      50% {
+        transform: scale(1.05);
+      }
+    }
+
+    .task-item.success {
+      animation: bounce 0.6s ease;
+    }
+
+    .task-checkbox {
+      width: 24px;
+      height: 24px;
+      border: 3px solid #4CAF50;
+      border-radius: 6px;
+      margin-right: 12px;
+      position: relative;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+
+    .task-checkbox.completed {
+      background: #4CAF50;
+      border-color: #4CAF50;
+    }
+
+    .task-checkbox.completed::after {
+      content: '✓';
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      color: white;
+      font-weight: bold;
+      font-size: 16px;
+    }
+
+    .task-name {
+      flex: 1;
+      font-weight: 500;
+    }
+
+    .task-item.completed {
+      background: rgba(76, 175, 80, 0.15);
+      border-color: rgba(76, 175, 80, 0.3);
+    }
+
+    .task-item.completed .task-name {
+      text-decoration: line-through;
+      color: #666;
+    }
+
+    .progress-indicator {
+      text-align: center;
+      font-size: 1em;
+      font-weight: bold;
+      padding: 10px;
+      border-radius: 10px;
+      margin-bottom: 10px;
+    }
+
+    .allowance-status {
+      background: rgba(76, 175, 80, 0.2);
+      color: #2E7D32;
+      border: 2px solid #4CAF50;
+    }
+
+    .allowance-status.incomplete {
+      background: rgba(255, 152, 0, 0.2);
+      color: #E65100;
+      border: 2px solid #FF9800;
+    }
+
+    .bonus-status {
+      background: rgba(255, 152, 0, 0.2);
+      color: #E65100;
+      border: 2px solid #FF9800;
+    }
+
+    .bonus-status.complete {
+      background: rgba(76, 175, 80, 0.2);
+      color: #2E7D32;
+      border: 2px solid #4CAF50;
+    }
+
+    .reward-progress {
+      background: rgba(156, 39, 176, 0.2);
+      color: #6A1B9A;
+      border: 2px solid #9C27B0;
+    }
+
+    .admin-controls {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      display: flex;
+      gap: 10px;
+      z-index: 1000;
+      flex-direction: column;
+    }
+
+    .admin-btn {
+      background: #ff4757;
+      color: white;
+      border: none;
+      padding: 12px 20px;
+      border-radius: 25px;
+      font-size: 1em;
+      font-weight: bold;
+      cursor: pointer;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+      transition: all 0.3s ease;
+    }
+
+    .admin-btn:hover {
+      background: #ff3838;
+      transform: translateY(-2px);
+    }
+
+    .admin-btn.switch {
+      background: #3742fa;
+    }
+
+    .admin-btn.switch:hover {
+      background: #2f3542;
+    }
+
+    @media (max-width: 768px) {
       .container {
-        display: flex;
-        min-height: 100vh;
-        width: 100vw;
+        flex-direction: column;
       }
 
       .child-section {
-        flex: 1;
-        padding: 20px;
-        display: flex;
-        flex-direction: column;
-        gap: 15px;
-      }
-
-      .avery-section {
-        background: linear-gradient(135deg, #ff9a9e 0%, #fecfef 100%);
-        border-right: 4px solid #fff;
-      }
-
-      .adyson-section {
-        background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);
+        padding: 15px;
+        min-height: 50vh;
       }
 
       .child-header {
-        text-align: center;
-        color: #333;
-        font-size: 2.5em;
-        font-weight: bold;
-        text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
-        margin-bottom: 10px;
+        font-size: 2em;
       }
 
-      .week-info {
-        text-align: center;
-        font-size: 1.2em;
-        color: #555;
-        margin-bottom: 15px;
+      .child-section:first-child {
+        border-right: none;
+        border-bottom: 4px solid #fff;
       }
 
       .stats {
-        display: flex;
-        justify-content: space-around;
-        margin-bottom: 20px;
-        flex-wrap: wrap;
+        justify-content: center;
       }
 
       .stat-item {
-        background: rgba(255, 255, 255, 0.9);
-        padding: 10px 15px;
-        border-radius: 15px;
-        text-align: center;
-        min-width: 120px;
-        margin: 5px;
-        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-      }
-
-      .stat-value {
-        font-size: 1.5em;
-        font-weight: bold;
-        color: #333;
-      }
-
-      .stat-label {
-        font-size: 0.9em;
-        color: #666;
+        min-width: 80px;
+        padding: 8px 10px;
       }
 
       .tasks-container {
-        flex: 1;
-        overflow-y: auto;
-        padding: 10px;
-        background: rgba(255, 255, 255, 0.1);
-        border-radius: 20px;
-        margin-bottom: 10px;
-        max-height: 60vh;
+        max-height: 50vh;
       }
 
-      .task-group {
-        margin-bottom: 25px;
+      .task-list {
+        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+        gap: 8px;
       }
 
-      .task-group-title {
-        font-size: 1.4em;
-        font-weight: bold;
-        color: #333;
-        margin-bottom: 10px;
-        text-align: center;
-        text-transform: uppercase;
-        letter-spacing: 1px;
+      .task-item {
+        min-height: 50px;
+        padding: 12px;
+        font-size: 0.9em;
       }
+    }
 
-      .task-tile {
-        background: rgba(255, 255, 255, 0.95);
-        border: none;
-        border-radius: 15px;
-        padding: 20px;
-        margin: 8px 0;
-        font-size: 1.3em;
-        font-weight: bold;
-        color: #333;
-        cursor: pointer;
-        transition: all 0.3s ease;
-        width: 100%;
-        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-        touch-action: manipulation;
-        user-select: none;
+    @media (min-width: 769px) {
+      .child-section {
+        min-height: 100vh;
       }
+    }
+  </style>
+</head>
 
-      .task-tile:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 6px 16px rgba(0,0,0,0.2);
-      }
+<body>
+  <div class="container" id="app-container">
+    <!-- Kids will be loaded dynamically -->
+  </div>
 
-      .task-tile:active {
-        transform: translateY(0);
-        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-      }
+  <div class="admin-controls">
+    <button class="admin-btn switch" onclick="switchLists()">Switch A/B Lists</button>
+    <button class="admin-btn" onclick="refreshData()">Refresh</button>
+  </div>
 
-      .task-tile.completed {
-        background: rgba(200, 200, 200, 0.6);
-        color: #888;
-        transform: none;
-        box-shadow: 0 2px 6px rgba(0,0,0,0.1);
-      }
+  <script>
+    // Global app state
+    let kids = [];
+    const today = new Date().toISOString().split('T')[0];
 
-      .task-tile.completed:hover {
-        transform: none;
-      }
-
-      .bonus-indicator {
-        text-align: center;
-        font-size: 1.1em;
-        font-weight: bold;
-        padding: 10px;
-        border-radius: 10px;
-        margin-top: 10px;
-      }
-
-      .bonus-available {
-        background: rgba(76, 175, 80, 0.2);
-        color: #2E7D32;
-        border: 2px solid #4CAF50;
-      }
-
-      .bonus-earned {
-        background: rgba(255, 193, 7, 0.2);
-        color: #F57C00;
-        border: 2px solid #FFC107;
-      }
-
-      .admin-controls {
-        position: fixed;
-        bottom: 20px;
-        right: 20px;
-        display: flex;
-        gap: 10px;
-        z-index: 1000;
-      }
-
-      .admin-btn {
-        background: #ff4757;
-        color: white;
-        border: none;
-        padding: 12px 20px;
-        border-radius: 25px;
-        font-size: 1em;
-        font-weight: bold;
-        cursor: pointer;
-        box-shadow: 0 4px 12px rgba(0,0,0,0.2);
-        transition: all 0.3s ease;
-      }
-
-      .admin-btn:hover {
-        background: #ff3838;
-        transform: translateY(-2px);
-      }
-
-      .admin-btn.approve {
-        background: #2ed573;
-      }
-
-      .admin-btn.approve:hover {
-        background: #17b978;
-      }
-
-      .progress-bar {
-        height: 6px;
-        background: rgba(255, 255, 255, 0.3);
-        border-radius: 3px;
-        overflow: hidden;
-        margin-top: 5px;
-      }
-
-      .progress-fill {
-        height: 100%;
-        background: #4CAF50;
-        transition: width 0.3s ease;
-      }
-
-      @media (max-width: 768px) {
-        .container {
-          flex-direction: column;
-        }
-        
-        .child-section {
-          padding: 15px;
-          min-height: 50vh;
-        }
-        
-        .child-header {
-          font-size: 2em;
-        }
-        
-        .task-tile {
-          font-size: 1.1em;
-          padding: 15px;
-        }
-        
-        .avery-section {
-          border-right: none;
-          border-bottom: 4px solid #fff;
-        }
-      }
-
-      @media (min-width: 769px) {
-        .child-section {
-          min-height: 100vh;
-        }
-      }
-    </style>
-  </head>
-  <body>
-    <div class="container">
-      <!-- Avery's Section -->
-      <div class="child-section avery-section">
-        <h1 class="child-header">AVERY</h1>
-        <div class="week-info">
-          <span id="avery-week-type">Week A</span>
-        </div>
-        <div class="stats">
-          <div class="stat-item">
-            <div class="stat-value" id="avery-points">0</div>
-            <div class="stat-label">Points</div>
-          </div>
-          <div class="stat-item">
-            <div class="stat-value" id="avery-earnings">In Progress...</div>
-            <div class="stat-label">Today's Status</div>
-          </div>
-          <div class="stat-item">
-            <div class="stat-value" id="avery-streak">30 to go</div>
-            <div class="stat-label">Reward Progress</div>
-          </div>
-        </div>
-        
-        <div class="tasks-container">
-          <div class="task-group">
-            <div class="task-group-title">Daily Chores</div>
-            <div id="avery-weekly-tasks"></div>
-          </div>
-          
-          <div class="task-group">
-            <div class="task-group-title">Daily Extras</div>
-            <div id="avery-daily-tasks"></div>
-          </div>
-        </div>
-        
-        <div id="avery-bonus" class="bonus-indicator" style="display: none;"></div>
-      </div>
-
-      <!-- Adyson's Section -->
-      <div class="child-section adyson-section">
-        <h1 class="child-header">ADYSON</h1>
-        <div class="week-info">
-          <span id="adyson-week-type">Week B</span>
-        </div>
-        <div class="stats">
-          <div class="stat-item">
-            <div class="stat-value" id="adyson-points">0</div>
-            <div class="stat-label">Points</div>
-          </div>
-          <div class="stat-item">
-            <div class="stat-value" id="adyson-earnings">In Progress...</div>
-            <div class="stat-label">Today's Status</div>
-          </div>
-          <div class="stat-item">
-            <div class="stat-value" id="adyson-streak">30 to go</div>
-            <div class="stat-label">Reward Progress</div>
-          </div>
-        </div>
-        
-        <div class="tasks-container">
-          <div class="task-group">
-            <div class="task-group-title">Daily Chores</div>
-            <div id="adyson-weekly-tasks"></div>
-          </div>
-          
-          <div class="task-group">
-            <div class="task-group-title">Daily Extras</div>
-            <div id="adyson-daily-tasks"></div>
-          </div>
-        </div>
-        
-        <div id="adyson-bonus" class="bonus-indicator" style="display: none;"></div>
-      </div>
-    </div>
-
-    <div class="admin-controls">
-      <button class="admin-btn" onclick="resetDay()">Reset Day</button>
-    </div>
-
-    <script>
-      // Configuration
-      const CHORE_LISTS = {
-        A: ['Litter Box', 'Dishes', 'Kitchen Floors'],
-        B: ['Bathrooms', 'Living Room Floors', 'Cat Water']
+    // API helper functions
+    async function apiCall(method, url, data = null) {
+      const options = {
+        method,
+        headers: data ? { 'Content-Type': 'application/json' } : {},
       };
-
-      const DAILY_EXTRAS = ['Practice', 'Stretch', 'Exercise'];
-
-      // Get current week type (A or B) based on a reference date
-      function getCurrentWeekType() {
-        const referenceDate = new Date('2024-01-01'); // Monday of a reference week A
-        const now = new Date();
-        const daysSinceReference = Math.floor((now - referenceDate) / (1000 * 60 * 60 * 24));
-        const weeksSinceReference = Math.floor(daysSinceReference / 7);
-        return weeksSinceReference % 2 === 0 ? 'A' : 'B';
+      if (data) {
+        options.body = JSON.stringify(data);
       }
 
-      // Get current day of week (0 = Sunday, 1 = Monday, etc.)
-      function getCurrentDay() {
-        return new Date().getDay();
+      const response = await fetch(url, options);
+      if (!response.ok) {
+        throw new Error(`API call failed: ${response.statusText}`);
       }
 
-      // Get current date string
-      function getCurrentDateString() {
-        return new Date().toDateString();
-      }
+      if (response.status === 204) return null;
+      return await response.json();
+    }
 
-      // Storage functions
-      function saveData(data) {
-        localStorage.setItem('choreTracker', JSON.stringify(data));
-      }
+    // Load data from database
+    async function loadDataFromDatabase() {
+      try {
+        // Load kids and their progress
+        kids = await apiCall('GET', '/api/kids');
 
-      function loadData() {
-        const saved = localStorage.getItem('choreTracker');
-        if (saved) {
-          const data = JSON.parse(saved);
-          // Migrate old data structure to new one
-          ['avery', 'adyson'].forEach(childName => {
-            const childData = data[childName];
-            if (childData.weeklyTasks && !childData.dailyChores) {
-              childData.dailyChores = childData.weeklyTasks || {};
-            }
-            if (childData.dailyTasks && !childData.dailyExtras) {
-              childData.dailyExtras = {};
-            }
-            // Ensure all required properties exist
-            childData.dailyChores = childData.dailyChores || {};
-            childData.dailyExtras = childData.dailyExtras || {};
-            childData.dailyExtrasCompletedToday = childData.dailyExtrasCompletedToday || false;
-            childData.points = childData.points || 0;
-          });
-          return data;
+        // Load each kid's chores, extra tasks, and progress
+        for (const kid of kids) {
+          kid.chores = await apiCall('GET', `/api/kids/${kid.id}/chores?date=${today}`);
+          kid.extraTasks = await apiCall('GET', `/api/kids/${kid.id}/extra-tasks?date=${today}`);
+          kid.progress = await apiCall('GET', `/api/kids/${kid.id}/progress?date=${today}`);
         }
-        return {
-          avery: {
-            points: 0,
-            dailyChores: {}, // Track daily completion of weekly chores
-            dailyExtras: {}, // Track daily completion of extra tasks
-            dailyExtrasCompletedToday: false, // Track if all extras completed today
-            lastResetDate: getCurrentDateString(),
-            currentWeek: getCurrentWeekType(),
-            streak: 0,
-            weeklyComplete: false,
-            bonusEarned: false
-          },
-          adyson: {
-            points: 0,
-            dailyChores: {}, // Track daily completion of weekly chores
-            dailyExtras: {}, // Track daily completion of extra tasks
-            dailyExtrasCompletedToday: false, // Track if all extras completed today
-            lastResetDate: getCurrentDateString(),
-            currentWeek: getCurrentWeekType() === 'A' ? 'B' : 'A',
-            streak: 0,
-            weeklyComplete: false,
-            bonusEarned: false
-          }
-        };
+
+        console.log('Loaded kids:', kids);
+
+      } catch (error) {
+        console.error('Failed to load data from database:', error);
+        kids = [];
       }
+    }
 
-      // Initialize data
-      let appData = loadData();
+    // Toggle individual task completion
+    async function toggleTask(kidId, taskType, taskId, taskElement) {
+      try {
+        // Add loading state
+        taskElement.classList.add('loading');
 
-      // Check if we need to reset for new day
-      function checkDailyReset() {
-        const currentDate = getCurrentDateString();
-        const currentWeek = getCurrentWeekType();
-        
-        if (appData.avery.lastResetDate !== currentDate) {
-          // Reset daily tasks
-          appData.avery.dailyChores = {};
-          appData.avery.dailyExtras = {};
-          appData.avery.dailyExtrasCompletedToday = false;
-          appData.adyson.dailyChores = {};
-          appData.adyson.dailyExtras = {};
-          appData.adyson.dailyExtrasCompletedToday = false;
-          appData.avery.lastResetDate = currentDate;
-          appData.adyson.lastResetDate = currentDate;
-          
-          // Check if week changed
-          if (appData.avery.currentWeek !== currentWeek) {
-            appData.avery.currentWeek = currentWeek;
-            appData.adyson.currentWeek = currentWeek === 'A' ? 'B' : 'A';
-            appData.avery.weeklyComplete = false;
-            appData.adyson.weeklyComplete = false;
-            appData.avery.bonusEarned = false;
-            appData.adyson.bonusEarned = false;
-          }
-          
-          saveData(appData);
-        }
+        const result = await apiCall('POST', `/api/kids/${kidId}/tasks/${taskType}/${taskId}/toggle`, { date: today });
+        console.log(result.message);
+
+        // Remove loading state
+        taskElement.classList.remove('loading');
+
+        // Add success animation
+        taskElement.classList.add('success');
+        setTimeout(() => {
+          taskElement.classList.remove('success');
+        }, 600);
+
+        // Update data and display
+        await loadDataFromDatabase();
+        updateDisplay();
+      } catch (error) {
+        console.error('Failed to toggle task:', error);
+        // Remove loading state on error
+        taskElement.classList.remove('loading');
       }
+    }
 
-      // Create task tile
-      function createTaskTile(taskName, isCompleted, onClick) {
-        const tile = document.createElement('button');
-        tile.className = `task-tile ${isCompleted ? 'completed' : ''}`;
-        tile.textContent = taskName;
-        tile.onclick = onClick;
-        return tile;
-      }
-
-      // Check if all daily chores are complete (for $16 earning)
-      function checkDailyChoresComplete(childData) {
-        const dailyChores = CHORE_LISTS[childData.currentWeek];
-        return dailyChores.every(task => childData.dailyChores[task]);
-      }
-
-      // Check if all daily extras are complete (for $4 bonus and 1 point)
-      function checkDailyExtrasComplete(childData) {
-        return DAILY_EXTRAS.every(task => childData.dailyExtras[task]);
-      }
-
-      // Update child's tasks display
-      function updateChildTasks(childName) {
-        const childData = appData[childName.toLowerCase()];
-        const weeklyTasksContainer = document.getElementById(`${childName.toLowerCase()}-weekly-tasks`);
-        const dailyTasksContainer = document.getElementById(`${childName.toLowerCase()}-daily-tasks`);
-        
-        // Clear containers
-        weeklyTasksContainer.innerHTML = '';
-        dailyTasksContainer.innerHTML = '';
-        
-        // Daily chores (weekly chores done daily)
-        const dailyChores = CHORE_LISTS[childData.currentWeek];
-        dailyChores.forEach(task => {
-          const isCompleted = childData.dailyChores[task] || false;
-          const tile = createTaskTile(task, isCompleted, () => {
-            // Toggle the task completion
-            childData.dailyChores[task] = !isCompleted;
-            updateDisplay();
-            saveData(appData);
-          });
-          weeklyTasksContainer.appendChild(tile);
-        });
-        
-        // Daily extra tasks
-        DAILY_EXTRAS.forEach(task => {
-          const isCompleted = childData.dailyExtras[task] || false;
-          const tile = createTaskTile(task, isCompleted, () => {
-            // Toggle the task completion
-            if (isCompleted) {
-              delete childData.dailyExtras[task];
-            } else {
-              childData.dailyExtras[task] = true;
-            }
-            
-            // Check if all extra tasks are now complete
-            const allExtrasComplete = checkDailyExtrasComplete(childData);
-            const wasComplete = childData.dailyExtrasCompletedToday || false;
-            
-            if (allExtrasComplete && !wasComplete) {
-              // Award 1 point for completing ALL extra tasks today
-              childData.points += 1;
-              childData.dailyExtrasCompletedToday = true;
-            } else if (!allExtrasComplete && wasComplete) {
-              // Remove 1 point if they were complete but now aren't
-              childData.points = Math.max(0, childData.points - 1);
-              childData.dailyExtrasCompletedToday = false;
-            }
-            
-            updateDisplay();
-            saveData(appData);
-          });
-          dailyTasksContainer.appendChild(tile);
-        });
-      }
-
-      // Calculate today's earnings status
-      function getTodaysStatus(childData) {
-        const choresDone = checkDailyChoresComplete(childData);
-        const extrasDone = checkDailyExtrasComplete(childData);
-        
-        let status = '';
-        if (choresDone && extrasDone) {
-          status = 'Complete! 🌟';
-        } else if (choresDone) {
-          status = 'Chores Done ✓';
-        } else if (extrasDone) {
-          status = 'Extras Done ✓';
-        } else {
-          status = 'In Progress...';
-        }
-        
-        return status;
-      }
-
-      // Update bonus indicator
-      function updateBonusIndicator(childName) {
-        const childData = appData[childName.toLowerCase()];
-        const bonusElement = document.getElementById(`${childName.toLowerCase()}-bonus`);
-        
-        const choresDone = checkDailyChoresComplete(childData);
-        const extrasDone = checkDailyExtrasComplete(childData);
-        
-        if (choresDone && extrasDone) {
-          bonusElement.textContent = '🌟 All Tasks Complete Today!';
-          bonusElement.className = 'bonus-indicator bonus-earned';
-          bonusElement.style.display = 'block';
-        } else if (choresDone) {
-          bonusElement.textContent = '✓ Daily Chores Complete';
-          bonusElement.className = 'bonus-indicator bonus-available';
-          bonusElement.style.display = 'block';
-        } else if (extrasDone) {
-          bonusElement.textContent = '✓ Extra Tasks Complete';
-          bonusElement.className = 'bonus-indicator bonus-available';
-          bonusElement.style.display = 'block';
-        } else {
-          bonusElement.style.display = 'none';
-        }
-      }
-
-      // Update display
-      function updateDisplay() {
-        checkDailyReset();
-        
-        ['avery', 'adyson'].forEach(childName => {
-          const childData = appData[childName];
-          
-          // Update week type
-          document.getElementById(`${childName}-week-type`).textContent = `Week ${childData.currentWeek}`;
-          
-          // Update stats
-          document.getElementById(`${childName}-points`).textContent = childData.points;
-          document.getElementById(`${childName}-earnings`).textContent = getTodaysStatus(childData);
-          
-          // Update streak (points toward 30 point reward)
-          const pointsToReward = 30 - childData.points;
-          let streakText = pointsToReward <= 0 ? 'REWARD!' : `${pointsToReward} to go`;
-          document.getElementById(`${childName}-streak`).textContent = streakText;
-          
-          // Update tasks
-          updateChildTasks(childName);
-          
-          // Update bonus indicator
-          updateBonusIndicator(childName);
-        });
-        
-        // No longer need approve button functionality
-      }
-
-      // Reset day function
-      function resetDay() {
-        if (confirm('Reset today\'s tasks? This will clear all daily chores and extra tasks for today.')) {
-          // Reset today's daily tasks
-          ['avery', 'adyson'].forEach(childName => {
-            const childData = appData[childName];
-            
-            // Reset daily chores
-            childData.dailyChores = {};
-            
-            // Reset daily extras
-            childData.dailyExtras = {};
-            childData.dailyExtrasCompletedToday = false;
-          });
-          
-          saveData(appData);
+    // Switch A/B lists (admin function)
+    async function switchLists() {
+      if (confirm('Switch all kids to opposite chore lists? This is typically done weekly.')) {
+        try {
+          const result = await apiCall('POST', '/api/admin/switch-lists');
+          console.log(result.message);
+          await loadDataFromDatabase();
           updateDisplay();
+        } catch (error) {
+          console.error('Failed to switch lists:', error);
         }
       }
+    }
 
+    // Create task item with checkbox
+    function createTaskItem(task, kidId, taskType) {
+      const item = document.createElement('div');
+      item.className = `task-item ${task.completed ? 'completed' : ''}`;
 
+      item.innerHTML = `
+        <div class="task-checkbox ${task.completed ? 'completed' : ''}"></div>
+        <div class="task-name">${task.chore_name || task.task_name}</div>
+      `;
 
-      // Initialize app
-      checkDailyReset();
+      item.onclick = () => toggleTask(kidId, taskType, task.id, item);
+
+      return item;
+    }
+
+    // Create kid section
+    function createKidSection(kid) {
+      const section = document.createElement('div');
+      section.className = 'child-section';
+
+      const pointsToReward = Math.max(0, 30 - kid.points);
+      const choreStatus = kid.progress.chores_completed ? 'complete' : 'incomplete';
+      const extraStatus = kid.progress.extra_tasks_completed ? 'complete' : 'incomplete';
+
+      section.innerHTML = `
+          <h1 class="child-header">${kid.name.toUpperCase()}</h1>
+          <div class="list-indicator">Currently on List ${kid.current_list}</div>
+          
+          <div class="stats">
+            <div class="stat-item">
+              <div class="stat-value">${kid.points}</div>
+              <div class="stat-label">Points</div>
+            </div>
+            <div class="stat-item">
+              <div class="stat-value">${pointsToReward}</div>
+              <div class="stat-label">To Reward</div>
+            </div>
+            <div class="stat-item">
+              <div class="stat-value">${kid.progress.chores_completed ? '✅' : '⏳'}</div>
+              <div class="stat-label">Daily Chores</div>
+            </div>
+            <div class="stat-item">
+              <div class="stat-value">${kid.progress.extra_tasks_completed ? '✅' : '⏳'}</div>
+              <div class="stat-label">Extra Tasks</div>
+            </div>
+          </div>
+
+          <div class="tasks-container">
+            <div class="task-group">
+              <div class="task-group-title">Daily Chores (List ${kid.current_list})</div>
+              <div class="task-list" id="chores-${kid.id}"></div>
+            </div>
+            
+            <div class="task-group">
+              <div class="task-group-title">Extra Tasks</div>
+              <div class="task-list" id="extra-tasks-${kid.id}"></div>
+            </div>
+          </div>
+        `;
+
+      // Add chore items with checkboxes
+      const choresContainer = section.querySelector(`#chores-${kid.id}`);
+      kid.chores.forEach(chore => {
+        const item = createTaskItem(chore, kid.id, 'chore');
+        choresContainer.appendChild(item);
+      });
+
+      // Add extra task items with checkboxes
+      const extraTasksContainer = section.querySelector(`#extra-tasks-${kid.id}`);
+      kid.extraTasks.forEach(task => {
+        const item = createTaskItem(task, kid.id, 'extra');
+        extraTasksContainer.appendChild(item);
+      });
+
+      return section;
+    }
+
+    // Update display
+    function updateDisplay() {
+      const container = document.getElementById('app-container');
+      container.innerHTML = '';
+
+      kids.forEach(kid => {
+        const section = createKidSection(kid);
+        container.appendChild(section);
+      });
+    }
+
+    // Refresh data
+    async function refreshData() {
+      await loadDataFromDatabase();
+      updateDisplay();
+    }
+
+    // Initialize app
+    async function initApp() {
+      await loadDataFromDatabase();
       updateDisplay();
 
-      // Auto-refresh every minute to check for day changes
-      setInterval(() => {
-        checkDailyReset();
+      // Auto-refresh every 60 seconds
+      setInterval(async () => {
+        await loadDataFromDatabase();
         updateDisplay();
       }, 60000);
+    }
 
-      // Prevent zoom on double tap
-      let lastTouchEnd = 0;
-      document.addEventListener('touchend', function (event) {
-        const now = (new Date()).getTime();
-        if (now - lastTouchEnd <= 300) {
-          event.preventDefault();
-        }
-        lastTouchEnd = now;
-      }, false);
-    </script>
-    
-    <!-- This is a replit script which adds a banner on the top of the page when opened in development mode outside the replit environment -->
-    <script type="text/javascript" src="https://replit.com/public/js/replit-dev-banner.js"></script>
-  </body>
+    // Start the app
+    initApp();
+  </script>
+</body>
+
 </html>
