@@ -1,3 +1,7 @@
+// Load environment variables FIRST, before any other operations
+import { config } from "dotenv";
+config({ override: true });
+
 import { Pool, neonConfig } from "@neondatabase/serverless";
 import { drizzle } from "drizzle-orm/neon-serverless";
 import ws from "ws";
